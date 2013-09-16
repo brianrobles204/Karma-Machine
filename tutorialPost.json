@@ -1,0 +1,52 @@
+{
+    "kind": "Listing",
+    "data": {
+        "modhash": "noModHash",
+        "children": [
+
+{
+    "kind": "t3",
+    "data": {
+        "domain": "self.karmaMachine",
+        "banned_by": null,
+        "media_embed": { },
+        "subreddit": "KarmaMachine",
+        "selftext_html": null,
+        "selftext": "A Reddit app: View the frontpage of the internet on your Ubuntu touch device. Thank you for trying Karma Machine!",
+        "likes": null,
+        "secure_media": null,
+        "saved": false,
+        "id": "tutorialID",
+        "secure_media_embed": { },
+        "clicked": false,
+        "stickied": true,
+        "author": "xineoph",
+        "media": null,
+        "score": 1234,
+        "approved_by": null,
+        "over_18": false,
+        "hidden": false,
+        "thumbnail": "karmaMachine.png",
+        "subreddit_id": "tutorialSubredditID",
+        "edited": false,
+        "link_flair_css_class": null,
+        "author_flair_css_class": null,
+        "downs": 0,
+        "is_self": true,
+        "permalink": "/r/Ubuntu",
+        "name": "t3_tutorialID",
+        "created": 1379245312,
+        "url": "http://www.reddit.com/r/Ubuntu",
+        "author_flair_text": null,
+        "title": "Swipe posts (and comments) to the right to upvote, and left to downvote. Try it on this post! (Note: You need to sign in first to cast a vote.)",
+        "created_utc": 1379216512,
+        "link_flair_text": null,
+        "ups": 1234,
+        "num_comments": 0,
+        "num_reports": null,
+        "distinguished": null
+    }
+}
+        ]
+    }
+}

@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=Karma Machine
+Comment=A Reddit app: View the frontpage of the internet on your Ubuntu touch device.
+Exec=/usr/bin/qmlscene $@ /usr/share/KarmaMachine/KarmaMachine.qml
+Icon=karmaMachine.png
+Terminal=false
+Type=Application
+X-Ubuntu-Touch=true

@@ -1,0 +1,14 @@
+{
+    "description": "A Reddit app: View the frontpage of the internet on your Ubuntu touch device.",
+    "framework": "ubuntu-sdk-13.10",
+    "hooks": {
+        "KarmaMachine": {
+            "apparmor": "KarmaMachine.json",
+            "desktop": "KarmaMachine.desktop"
+        }
+    },
+    "maintainer": "Brian Robles <brianrobles204@gmail.com>",
+    "name": "com.ubuntu.developer.brianrobles204.karma-machine",
+    "title": "Karma Machine",
+    "version": "0.5"
+}
