@@ -168,8 +168,7 @@ Item {
                 }
 
                 // TODO use Qt.createQMLObject instead
-                var srComponent = Qt.createComponent("SpaceRectangle.qml")
-                var spaceRect = srComponent.createObject(commentsColumn)
+                var spaceRect = Qt.createQmlObject("import QtQuick 2.0; Item{width: 1; height: units.gu(0.6)}", commentsColumn)
                 if (level === 1) spaceRect.height = units.gu(1)
                 commentItem.bgRect.height = addToHeight - units.gu(0.6)
 

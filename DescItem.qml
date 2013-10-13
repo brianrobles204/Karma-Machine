@@ -9,7 +9,13 @@ SwipeBox{
         left: parent.left
         right: parent.right
     }
-    property string vote: internalModel.data.likes === true ? "up" : internalModel.data.likes === false ? "down" : ""
+    /*property string vote: internalModel.data.likes === true ? "up" : internalModel.data.likes === false ? "down" : ""
+    onInternalModelChanged: console.log("vote: " + vote)*/
+    property string vote: ""
+
+    onInternalModelChanged: {
+        vote = internalModel.data.likes === true ? "up" : internalModel.data.likes === false ? "down" : ""
+    }
 
     onSwipedRight: {
         if(storageHandler.modhash !== "") {
@@ -92,6 +98,7 @@ SwipeBox{
             wrapMode: Text.Wrap
             horizontalAlignment: Text.AlignLeft
             color: UbuntuColors.coolGrey
+            onLinkActivated: linkHandler.openLink(link)
         }
         Rectangle {
             id: descContentBG

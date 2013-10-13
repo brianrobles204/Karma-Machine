@@ -10,9 +10,10 @@ import "MiscUtils.js" as MiscUtils
 
 MainView {
     objectName: "mainView"
-    applicationName: "KarmaMachine"
+    applicationName: "com.ubuntu.developer.brianrobles204.karma-machine"
     id: window
     automaticOrientation: true
+    anchorToKeyboard: true
 
     width: units.gu(42)
     //width: units.gu(120)
@@ -487,7 +488,7 @@ MainView {
     QtObject {
         id: storageHandler
         property variant keyArray: ['defaultSubList', 'commentsSort', 'modhash', 'username', 'passwd', 'autologin', 'firstTutorial']
-        property string defaultSubList: "adviceanimals,AskReddit,aww,bestof,books,earthporn,explainlikeimfive,funny,gaming,gifs,IAmA,movies,music,news,pics,science,technology,television,todayilearned,videos,worldnews,wtf"
+        property string defaultSubList: "Adviceanimals,Askreddit,Aww,Bestof,Books,Earthporn,Explainlikeimfive,Funny,Gaming,Gifs,Iama,Movies,Music,News,Pics,Science,Technology,Television,Todayilearned,Videos,Worldnews,Wtf"
         property string commentsSort: "confidence"
         property string modhash: ""
         property string username: ''
@@ -499,7 +500,7 @@ MainView {
         property string tmpUsername: 'user'
         property bool tmpIsInitialized: false
 
-        readonly property string roDefaultsSubList: "adviceanimals,AskReddit,aww,bestof,books,earthporn,explainlikeimfive,funny,gaming,gifs,IAmA,movies,music,news,pics,science,technology,television,todayilearned,videos,worldnews,wtf"
+        readonly property string roDefaultsSubList: "Adviceanimals,Askreddit,Aww,Bestof,Books,Earthporn,Explainlikeimfive,Funny,Gaming,Gifs,Iama,Movies,Music,News,Pics,Science,Technology,Television,Todayilearned,Videos,Worldnews,Wtf"
 
         function setProp(name, value) {
             setSetting(name, value)
@@ -507,7 +508,7 @@ MainView {
         }
 
         function getDatabase() {
-             return LocalStorage.openDatabaseSync("karmaMachine", "1.0", "StorageDatabase", 1000000);
+             return LocalStorage.openDatabaseSync("karma-machine", "1.0", "StorageDatabase", 1000000);
         }
 
         function initialize() {

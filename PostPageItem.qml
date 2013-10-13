@@ -147,8 +147,9 @@ Item {
         visible: !postPageItem.internalModel
 
         Item {
+            property real margin: units.gu(6)
             anchors.centerIn: postPageCover
-            width: coverLabel.width
+            width: parent.width - margin
             height: childrenRect.height
 
             Image {
@@ -165,8 +166,10 @@ Item {
                 anchors{
                     top: coverImage.bottom
                     topMargin: units.gu(2)
-                    horizontalCenter: parent.horizontalCenter
                 }
+                width: parent.width
+                horizontalAlignment: Text.AlignHCenter
+                wrapMode: Text.WordWrap
                 fontSize: "large"
             }
         }

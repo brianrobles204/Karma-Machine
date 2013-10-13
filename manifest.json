@@ -7,8 +7,8 @@
             "desktop": "KarmaMachine.desktop"
         }
     },
-    "maintainer": "Brian Robles <brianrobles204@gmail.com>",
+    "maintainer": "",
     "name": "com.ubuntu.developer.brianrobles204.karma-machine",
     "title": "Karma Machine",
-    "version": "0.5"
+    "version": "0.7"
 }

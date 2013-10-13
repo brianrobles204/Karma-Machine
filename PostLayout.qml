@@ -38,7 +38,7 @@ Item {
             }
             fillMode: Image.PreserveAspectCrop
         }
-        visible: internalModel ? (internalModel.data.thumbnail !== "self" && internalModel.data.thumbnail !== "") : false
+        visible: internalModel ? (internalModel.data.thumbnail !== "self" && internalModel.data.thumbnail !== "default" && internalModel.data.thumbnail !== "") : false
     }
 
     Column {

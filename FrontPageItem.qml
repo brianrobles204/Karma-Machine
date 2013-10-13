@@ -307,7 +307,7 @@ Item {
                                 function populateModel() {
                                     subredditListModel.clear()
                                     var listArray = storageHandler.defaultSubList.split(',').sort()
-                                    listArray.unshift("<b>Frontpage</b>","<b>All</b>")
+                                    listArray.unshift("<b>Frontpage</b>","<b>All</b>","<b>Custom...</b>")
                                     for (var i = 0; i < listArray.length; i++) {
                                         subredditListModel.append({"name": listArray[i]})
                                     }
@@ -322,6 +322,8 @@ Item {
                                             postFeed.subreddit = ''
                                         } else if (model.name === "<b>All</b>") {
                                             postFeed.subreddit = 'All'
+                                        }  else if (model.name === "<b>Custom...</b>") {
+                                            PopupUtils.open(customSubRDialogComponent)
                                         } else {
                                             postFeed.subreddit = model.name
                                         }
@@ -330,6 +332,55 @@ Item {
                             }
                         }
                     }
+                }
+
+                Component {
+                     id: customSubRDialogComponent
+                     Dialog {
+                         id: customSubRDialog
+                         title: "Enter a Custom Subreddit"
+                         text: "Subreddit of the Day:"
+
+                         Component.onCompleted: customSubRTextField.forceActiveFocus()
+                         function openSubreddit() {
+                             var name = customSubRTextField.text
+                             var lowerCaseName = name.toLowerCase()
+                             var firstToUpName = lowerCaseName.substr(0, 1).toUpperCase() + lowerCaseName.substr(1)
+                             postFeed.subreddit = firstToUpName
+                             PopupUtils.close(customSubRDialog)
+                         }
+
+                         TextField {
+                             id: customSubRTextField
+                             placeholderText: 'pics'
+                             primaryItem: Label {
+                                 text: " r/"
+                                 font.weight: Font.DemiBold
+                                 anchors{
+                                     top: parent.top
+                                     topMargin: units.gu(0.75)
+                                 }
+                             }
+                             hasClearButton: true
+                             onAccepted: customSubRDialog.openSubreddit()
+                         }
+                         Item {
+                             width: parent.width
+                             height: childrenRect.height
+                             Button {
+                                 text: "Cancel"
+                                 gradient: UbuntuColors.greyGradient
+                                 onClicked: PopupUtils.close(customSubRDialog)
+                                 anchors.left: parent.left
+                             }
+                             Button {
+                                 text: "Enter"
+                                 gradient: UbuntuColors.orangeGradient
+                                 onClicked: customSubRDialog.openSubreddit()
+                                 anchors.right: parent.right
+                             }
+                         }
+                     }
                 }
 
                 Label {
@@ -512,17 +563,27 @@ Item {
              text: "The Frontpage of the Internet"
 
              Component.onCompleted: usernameTextField.forceActiveFocus()
+             function startLogin() {
+                 if (usernameTextField.text == "" || passwordTextField.text == "") return true;
+                 usernameTextField.focus = false
+                 passwordTextField.focus = false
+                 loginIndicator.visible = true
+                 storageHandler.setProp('autologin', rememberCheckBox.checked)
+                 var loginResponse = actionHandler.login(usernameTextField.text, passwordTextField.text)
+             }
 
              TextField {
                  id: usernameTextField
                  placeholderText: 'Username'
                  hasClearButton: true
+                 onAccepted: userDialog.startLogin()
              }
              TextField {
                  id: passwordTextField
                  placeholderText: 'Password'
                  hasClearButton: true
                  echoMode: TextInput.Password
+                 onAccepted: userDialog.startLogin()
              }
              MouseArea {
                  anchors{
@@ -573,11 +634,7 @@ Item {
                      id: loginButton
                      text: "Login"
                      gradient: UbuntuColors.orangeGradient
-                     onClicked: {
-                         loginIndicator.visible = true
-                         storageHandler.setProp('autologin', rememberCheckBox.checked)
-                         var loginResponse = actionHandler.login(usernameTextField.text, passwordTextField.text)
-                     }
+                     onClicked: userDialog.startLogin()
                      anchors.right: parent.right
 
                      Connections {
