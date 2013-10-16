@@ -3,7 +3,7 @@ import QtGraphicalEffects 1.0
 import Ubuntu.Components 0.1
 import Ubuntu.Components.ListItems 0.1 as ListItems
 import Ubuntu.Components.Popups 0.1
-import "MiscUtils.js" as MiscUtils
+import "Utils/Misc.js" as MiscUtils
 import "JSONListModel" as JSON
 
 Item {

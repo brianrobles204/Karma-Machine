@@ -5,7 +5,7 @@
  */
 
 import QtQuick 2.0
-import "jsonpath.js" as JSONPath
+import "JSONListModel/jsonpath.js" as JSONPath
 
 ListModel {
     id: postFeedModel

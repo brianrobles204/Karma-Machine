@@ -1,13 +1,12 @@
 import QtQuick 2.0
-import QtGraphicalEffects 1.0
 import QtWebKit 3.0
 import QtQuick.LocalStorage 2.0
 import Ubuntu.Components 0.1
 import Ubuntu.Components.ListItems 0.1 as ListItem
 import Ubuntu.Components.Popups 0.1
 import Ubuntu.Layouts 0.1
-import "showdown.js" as Showdown
-import "MiscUtils.js" as MiscUtils
+import "Utils/Misc.js" as MiscUtils
+import "Utils/Showdown.js" as ShowdownUtils
 
 MainView {
     objectName: "mainView"
@@ -38,7 +37,7 @@ MainView {
               { type: 'output', regex: '</blockquote>', replace: '</td></tr></table></td></tr></table>' }
           ];
         }
-        var converter = new Showdown.Showdown.converter({extensions: [demo]})
+        var converter = new ShowdownUtils.Showdown.converter({extensions: [demo]})
         return converter.makeHtml(encodedText)
     }
 
@@ -287,7 +286,7 @@ MainView {
                         ToolbarButton {
                             action: Action {
                                 text: "Comment"
-                                iconSource: "media/toolbar/go-next.png"
+                                iconSource: "media/Comments.png"
                                 enabled: storageHandler.modhash != ""
                                 onTriggered: PopupUtils.open(commentComposerSheetComponent) //actionHandler.comment("test", postPageItem.internalModel.data.name)
                             }
@@ -351,7 +350,7 @@ MainView {
                             }
                             visible: linkOpen
                         }
-                        ToolbarButton {
+                        /*ToolbarButton {
                             action: Action {
                                 text: "Forward"
                                 iconSource: "media/toolbar/go-next.png"
@@ -359,7 +358,7 @@ MainView {
                                 onTriggered: postPageItem.__webSection.goForward()
                             }
                             visible: linkOpen
-                        }/* Ubuntu Touch does not support services, apparently. No API for opening links externally as of yet
+                        }*//* Ubuntu Touch does not support services, apparently. No API for opening links externally as of yet
                         //TODO: implement opening links, look at source code of Shorts or something
                         ToolbarButton {
                             action: Action {
@@ -656,7 +655,7 @@ MainView {
         storageHandler.initialize()
         if(storageHandler.autologin) actionHandler.login(storageHandler.username, storageHandler.passwd)
 
-        console.log(getHtmlText(">this is a test", "#ff0000"))
+        //console.log(getHtmlText(">this is a test", "#ff0000"))
         var component = Qt.createComponent("HeaderArea.qml")
         var header = component.createObject(pageStack.header)
         pageStack.header.__styleInstance.textColor = "#fafafa"

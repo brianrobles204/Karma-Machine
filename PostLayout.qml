@@ -1,6 +1,6 @@
 import QtQuick 2.0
 import Ubuntu.Components 0.1
-import "MiscUtils.js" as MiscUtils
+import "Utils/Misc.js" as MiscUtils
 
 Item {
     id: postRow
