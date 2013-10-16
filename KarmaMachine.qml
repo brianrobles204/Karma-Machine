@@ -4,6 +4,7 @@ import QtWebKit 3.0
 import QtQuick.LocalStorage 2.0
 import Ubuntu.Components 0.1
 import Ubuntu.Components.ListItems 0.1 as ListItem
+import Ubuntu.Components.Popups 0.1
 import Ubuntu.Layouts 0.1
 import "showdown.js" as Showdown
 import "MiscUtils.js" as MiscUtils
@@ -29,9 +30,15 @@ MainView {
     property variant currentPage: pageStack.currentPage
     property bool canBeToggled: postPageItem.canBeToggled
 
-    function getHtmlText(text) {
+    function getHtmlText(text, color) {
         var encodedText = MiscUtils.htmlspecialchars_decode(text)
-        var converter = new Showdown.Showdown.converter()
+        var demo = function(converter) {
+          return [
+              { type: 'output', regex: '<blockquote>', replace: '<p style="font-size:' + units.gu(0.5) + 'px">.</p><table cellpadding="-2" style="background-color:#999999"><tr><td> </td><td><table style="background-color:' + color + '"><tr><td style="padding-left:' + units.gu(1) + 'px">' },
+              { type: 'output', regex: '</blockquote>', replace: '</td></tr></table></td></tr></table>' }
+          ];
+        }
+        var converter = new Showdown.Showdown.converter({extensions: [demo]})
         return converter.makeHtml(encodedText)
     }
 
@@ -236,6 +243,27 @@ MainView {
             anchors.fill: parent
             visible: false
 
+            Component {
+                id: commentComposerSheetComponent
+                ComposerSheet {
+                    id: commentComposerSheet
+                    title: "Post a Comment"
+                    TextArea {
+                        id: commentTextArea
+                        anchors{
+                            fill: parent
+                            margins: units.gu(1.5)
+                        }
+                    }
+
+                    onCancelClicked: PopupUtils.close(commentComposerSheet)
+                    onConfirmClicked: {
+                        actionHandler.comment(commentTextArea.text, postPageItem.internalModel.data.name)
+                        PopupUtils.close(commentComposerSheet)
+                    }
+                }
+            }
+
             tools: ToolbarItems {
                 id: postPageToolbarItems
                 Item {
@@ -256,6 +284,14 @@ MainView {
                         }
                         spacing: units.gu(1)
 
+                        ToolbarButton {
+                            action: Action {
+                                text: "Comment"
+                                iconSource: "media/toolbar/go-next.png"
+                                enabled: storageHandler.modhash != ""
+                                onTriggered: PopupUtils.open(commentComposerSheetComponent) //actionHandler.comment("test", postPageItem.internalModel.data.name)
+                            }
+                        }
                         ToolbarButton {
                             action: Action {
                                 text: "Upvote"
@@ -324,6 +360,7 @@ MainView {
                             }
                             visible: linkOpen
                         }/* Ubuntu Touch does not support services, apparently. No API for opening links externally as of yet
+                        //TODO: implement opening links, look at source code of Shorts or something
                         ToolbarButton {
                             action: Action {
                                 text: "External"
@@ -381,6 +418,37 @@ MainView {
                             console.debug("error")
                         } else {
                             console.debug("Voted!")
+                        }
+                    } else {
+                        console.debug("error: " + http.status)
+                    }
+                }
+            }
+            http.send(params);
+        }
+
+        function comment(text, thing_id) {
+            var http = new XMLHttpRequest()
+            var commenturl = "http://www.reddit.com/api/comment"
+            var params = "text=" + text + "&thing_id=" + thing_id + "&uh="+storageHandler.modhash+"&api_type=json";
+            http.open("POST", commenturl, true);
+            console.debug(params)
+
+            // Send the proper header information along with the request
+            http.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+            http.setRequestHeader("Content-length", params.length);
+            http.setRequestHeader("User-Agent", "Karma Machine Reddit App 0.1")
+            http.setRequestHeader("Connection", "close");
+
+            http.onreadystatechange = function() {
+                if (http.readyState == 4) {
+                    if (http.status == 200) {
+                        console.debug(http.responseText)
+                        var jsonresponse = JSON.parse(http.responseText)
+                        if (jsonresponse.json !== undefined) {
+                            console.debug("error")
+                        } else {
+                            console.debug("Posted!")
                         }
                     } else {
                         console.debug("error: " + http.status)
@@ -588,6 +656,7 @@ MainView {
         storageHandler.initialize()
         if(storageHandler.autologin) actionHandler.login(storageHandler.username, storageHandler.passwd)
 
+        console.log(getHtmlText(">this is a test", "#ff0000"))
         var component = Qt.createComponent("HeaderArea.qml")
         var header = component.createObject(pageStack.header)
         pageStack.header.__styleInstance.textColor = "#fafafa"

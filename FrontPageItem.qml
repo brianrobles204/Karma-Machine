@@ -339,7 +339,7 @@ Item {
                      Dialog {
                          id: customSubRDialog
                          title: "Enter a Custom Subreddit"
-                         text: "Subreddit of the Day:"
+                         //text: "Subreddit of the Day:"
 
                          Component.onCompleted: customSubRTextField.forceActiveFocus()
                          function openSubreddit() {
