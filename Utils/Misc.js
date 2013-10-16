@@ -1,3 +1,7 @@
+//.pragma library
+Qt.include("Showdown.js")
+Qt.include("Extensions.js")
+
 function timeSince(date) {
     //Thanks to stackoverflow.com/questions/3177836
     var seconds = Math.floor((new Date() - date) / 1000);
@@ -103,4 +107,13 @@ function htmlspecialchars_decode (string, quote_style) {
   string = string.replace(/&amp;/g, '&');
 
   return string;
+}
+
+
+function getHtmlText(text, color, gridUnits) {
+    var encodedText = htmlspecialchars_decode(text)
+    var extensionsObj = getExtensionsObj(color, gridUnits)
+
+    var converter = new Showdown.converter(extensionsObj)
+    return converter.makeHtml(encodedText)
 }

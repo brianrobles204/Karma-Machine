@@ -1,3 +1,4 @@
+.pragma library
 //
 // showdown.js -- A javascript port of Markdown.
 //

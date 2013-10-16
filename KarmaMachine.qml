@@ -21,6 +21,11 @@ MainView {
 
     backgroundColor: "#dadada"
 
+    function getHtmlText(text, color) {
+        var gridUnit = units.gu(1)
+        return MiscUtils.getHtmlText(text, color, gridUnit)
+    }
+
     Layouts { id: dummyLayout; anchors.fill: parent;}
     property bool isPhone: dummyLayout.width <= units.gu(85)
     property string bigTitle: frontPageItem.title
@@ -28,18 +33,6 @@ MainView {
     property bool linkOpen: postPageItem.linkOpen
     property variant currentPage: pageStack.currentPage
     property bool canBeToggled: postPageItem.canBeToggled
-
-    function getHtmlText(text, color) {
-        var encodedText = MiscUtils.htmlspecialchars_decode(text)
-        var demo = function(converter) {
-          return [
-              { type: 'output', regex: '<blockquote>', replace: '<p style="font-size:' + units.gu(0.5) + 'px">.</p><table cellpadding="-2" style="background-color:#999999"><tr><td> </td><td><table style="background-color:' + color + '"><tr><td style="padding-left:' + units.gu(1) + 'px">' },
-              { type: 'output', regex: '</blockquote>', replace: '</td></tr></table></td></tr></table>' }
-          ];
-        }
-        var converter = new ShowdownUtils.Showdown.converter({extensions: [demo]})
-        return converter.makeHtml(encodedText)
-    }
 
     function togglePostPageItem() {
         postPageItem.toggle()
