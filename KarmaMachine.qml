@@ -647,7 +647,8 @@ MainView {
         storageHandler.initialize()
         if(storageHandler.autologin) actionHandler.login(storageHandler.username, storageHandler.passwd)
 
-        console.log(getHtmlText("This is a ^test that \^I am doing", "#ff0000"))
+        //console.log(getHtmlText("this http://en.wikipedia.org is a test bit.ly/foo is a test [lol](goog.le/hamster) mailto:brianrobles204@gmail.com this is a [test](http://www.hamster.com)", "#ff0000"))
+        console.log(getHtmlText("go to this/r/hamster http://www.reddit.com/r/subredditdrama [this] (http://isatest.com)"))
         var component = Qt.createComponent("HeaderArea.qml")
         var header = component.createObject(pageStack.header)
         pageStack.header.__styleInstance.textColor = "#fafafa"

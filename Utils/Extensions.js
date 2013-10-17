@@ -1,5 +1,10 @@
 .pragma library
-//Known bugs/limitations: Showdown.js ignores '\' as a way to cancel markdown. Not even extensions can override this
+
+/*
+    #Known Bugs/Limitations
+        *Showdown.js ignores '\' as a way to cancel markdown. Not even extensions can override this
+        *TODO: Links formatted with a space like [this] (http://www.website.com) are not recognized
+*/
 
 function getExtensionsObj(color, gridUnits) {
 
@@ -25,7 +30,8 @@ function getExtensionsObj(color, gridUnits) {
                 ]
     }
 
-    //Quotes Extension ('>' in markdown) so that it becomes readable and aesthetic in QML Rich Text
+
+    //Quotes Extension ('>' in markdown). Makes quotes readable and aesthetic in QML Rich Text
     //Large hack because QML Rich Text does not recognize background colors for individual table cells, nor background images at all it seems. Can't seem to set height either.
     //Solved by creating a table with our quoteBarColor background, then creating a table inside the table with our text and the normal background.
     var quoteExt = function(converter) {
@@ -48,47 +54,50 @@ function getExtensionsObj(color, gridUnits) {
     var linkExt = function (converter) {
         var linkColor = "#cb7f00" //orange
 
+        //Gets replaced (i.e. autolinked) text, given regex, but ignores pre-formatted links like [this](http://example.com)
+        function getReplacedText(text, regex, output) {
+            //Exclude links which are already formated for text. Taken from Showdown.js
+            var formattedLinks = text.match(/(\[((?:\[[^\]]*\]|[^\[\]])*)\]\([ \t]*()<?(.*?(?:\(.*?\).*?)?)>?[ \t]*((['"])(.*?)\6[ \t]*)?\))/g)
+
+            var newText = ""
+            if (formattedLinks) {
+                //There exists some formatted links, so we split the whole string along these formatted links, and replace these split strings, one at a time
+                var curTextSlice = ""
+                for (var i = 0; i < formattedLinks.length; i++) {
+                    var textSlice = text.slice(curTextSlice.length, text.indexOf(formattedLinks[i], curTextSlice.length))
+                    curTextSlice += textSlice + formattedLinks[i]
+                    var replacedSlice = textSlice.replace(regex, output) //autolink the current slice
+                    newText += replacedSlice + formattedLinks[i]
+                }
+                newText += text.slice(curTextSlice.length, -1).replace(regex, output) //add the remaining text, now autolinked
+            } else {
+                //No match for any formatted links, so just replace the whole thing
+                newText = text.replace(regex, output)
+            }
+
+            return newText
+        }
+
         return [
                     {
-                        //Autolink Extension that allows arbitrary URLs to be formatted automatically
+                        //Arbitrary Autolink Extension. Allows arbitrary URLs to be linked automatically
                         type: 'lang',
                         filter: function (text) {
-                            //Exclude links which are already formated for text, e.g. [like](http://www.this.com)
-                            var formattedLinks = text.match(/(\[((?:\[[^\]]*\]|[^\[\]])*)\]\([ \t]*()<?(.*?(?:\(.*?\).*?)?)>?[ \t]*((['"])(.*?)\6[ \t]*)?\))/g)
-
-                            //Thanks to John Gruber, http://daringfireball.net/2010/07/improved_regex_for_matching_urls
-                            var linkRegex = /\b((?:[a-z][\w-]+:(?:\/{1,3}|[a-z0-9%])|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}\/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'".,<>?«»“”‘’]))\b/gi
-                            var linkOutput = '<a href="$1">$1</a>'
-
-                            var newText = ""
-                            if (formattedLinks) {
-                                //There exists some formatted links, so we split the whole string along these formatted links, and autolink these split strings one at a time
-                                var curTextSlice = ""
-                                for (var i = 0; i < formattedLinks.length; i++) {
-                                    var textSlice;
-                                    /*if (i == 0) {
-                                        //still the first formatted link, start from zero
-                                        textSlice = text.slice(0,text.indexOf(formattedLinks[i]))
-                                    } else {
-                                        //after the first formatted link, start from the end of the last match
-                                        textSlice = text.slice(curTextSlice.length, text.indexOf(formattedLinks[i], curTextSlice.length))
-                                    }*/
-                                    textSlice = text.slice(curTextSlice.length, text.indexOf(formattedLinks[i], curTextSlice.length))
-                                    curTextSlice += textSlice + formattedLinks[i]
-                                    var replacedSlice = textSlice.replace(linkRegex, linkOutput) //autolink the current slice
-                                    newText += replacedSlice + formattedLinks[i]
-                                }
-                                newText += text.slice(newText.length, -1).replace(linkRegex, linkOutput) //add the remaining text, now autolinked
-                            } else {
-                                //No match for any formatted links, so just autolink the whole thing
-                                newText = text.replace(linkRegex, linkOutput)
-                            }
-
-                            return newText
+                            var autoLinkRegex = /\b((?:[a-z][\w-]+:(?:\/{1,3}|[a-z0-9%])|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}\/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'".,<>?«»“”‘’]))\b/gi
+                            var autoLinkOutput = '[$1]($1)'
+                            return getReplacedText(text, autoLinkRegex, autoLinkOutput)
+                        }
+                    },{
+                        //Subreddit Autolink Extension. Allows subreddits formatted as '/r/subreddit' to be linked automatically
+                        type: 'lang',
+                        filter: function (text) {
+                            var subRLinkRegex = /(\/r\/[\S]+)\b/gi
+                            var subRLinkOutput = '[$1](http://www.reddit.com$1)'
+                            return getReplacedText(text, subRLinkRegex, subRLinkOutput)
                         }
                     },
                     {
-                        //Link Color Extension that changes all links' color into one of your choosing
+                        //Link Color Extension. Changes all links' color into one of your choosing
                         type: 'output',
                         regex: '<a href="(.*?)">',
                         replace: function (match, link) {
