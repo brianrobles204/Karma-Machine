@@ -180,7 +180,7 @@ this.makeHtml = function(text) {
 	text = text.replace(/^[ \t]+$/mg,"");
 
 	// Run language extensions
-	Showdown.forEach(g_lang_extensions, function(x){
+    Showdown.forEach(g_lang_extensions, function(x){
 		text = _ExecuteExtension(x, text);
 	});
 
@@ -252,7 +252,7 @@ if (converter_options && converter_options.extensions) {
 
 var _ExecuteExtension = function(ext, text) {
 	if (ext.regex) {
-		var re = new RegExp(ext.regex, 'g');
+        var re = new RegExp(ext.regex, 'g');
 		return text.replace(re, ext.replace);
 	} else if (ext.filter) {
 		return ext.filter(text);
