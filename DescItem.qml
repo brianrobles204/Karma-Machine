@@ -92,7 +92,7 @@ SwipeBox{
             }
 
             property variant post: swipeBox.internalModel
-            text: post ? getHtmlText(post.data.selftext) : ""
+            text: post ? getHtmlText(post.data.selftext, "#fafafa") : ""
             textFormat: Text.RichText
             fontSize: "small"
             wrapMode: Text.Wrap
