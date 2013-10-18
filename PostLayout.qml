@@ -56,7 +56,7 @@ Item {
 
         Label {
             id: postTitle
-            text: internalModel ? MiscUtils.htmlspecialchars_decode(internalModel.data.title) : ""
+            text: internalModel ? MiscUtils.simpleFixHtmlChars(internalModel.data.title) : ""
             width: parent.width
             wrapMode: Text.Wrap
             horizontalAlignment: Text.AlignLeft

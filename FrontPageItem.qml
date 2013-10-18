@@ -343,6 +343,7 @@ Item {
 
                          Component.onCompleted: customSubRTextField.forceActiveFocus()
                          function openSubreddit() {
+                             frontPageItem.resetFlickable()
                              var name = customSubRTextField.text
                              var lowerCaseName = name.toLowerCase()
                              var firstToUpName = lowerCaseName.substr(0, 1).toUpperCase() + lowerCaseName.substr(1)

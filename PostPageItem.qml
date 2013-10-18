@@ -13,7 +13,7 @@ Item {
     property string webUrl: webSection.url
     property string commentsUrl: internalModel ? "http://reddit.com" + internalModel.data.permalink : "http://reddit.com"
     property string title: postHeader.title == "" ? " " : postHeader.title
-    property string subTitle: internalModel ? MiscUtils.htmlspecialchars_decode(internalModel.data.title) : ""
+    property string subTitle: internalModel ? MiscUtils.simpleFixHtmlChars(internalModel.data.title) : ""
     property bool linkOpen: commentsSection.state == "linkOpen"
     property bool canBeToggled: webSection.canBeOpened && internalModel != null
     property string vote: ""
@@ -478,7 +478,7 @@ Item {
                 horizontalAlignment: Text.AlignHCenter
                 clip: true
                 height: implicitHeight < maxHeight ? implicitHeight : maxHeight //parent.height - units.gu(3.6)
-                text: postPageItem.internalModel ? MiscUtils.htmlspecialchars_decode(postPageItem.internalModel.data.title) : ""
+                text: postPageItem.internalModel ? MiscUtils.simpleFixHtmlChars(postPageItem.internalModel.data.title) : ""
                 font.weight: Font.DemiBold
                 color: UbuntuColors.coolGrey
             }
