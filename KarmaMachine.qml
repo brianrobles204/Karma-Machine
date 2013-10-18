@@ -50,6 +50,24 @@ MainView {
             title: isPhone ? frontPageItem.title : " "
             flickable: isPhone ? frontPageItem.flickable : dummyFlickable
 
+            /*Rectangle{
+                id: debugtangle
+                width: units.gu(30)
+                height: units.gu(20)
+                anchors.centerIn: parent
+                color: "#fafafa"
+                z: 10000000000
+                Label {
+                    property string testText: "&gt;te&lt;s&gt;lol&lt;/s&gt;t\n
+&gt;&gt;test &gt;this&gt; is a &gt;&gt;test"
+                    text: getHtmlText(testText, "#fafafa")
+                    anchors.fill: parent
+                    anchors.margins: units.gu(1)
+                    wrapMode: Text.WordWrap
+                    textFormat: Text.RichText
+                }
+            }*/
+
             onStateChanged: {
                 if(state == "tabletState") {
                     if(pageStack.currentPage == postPage ) {

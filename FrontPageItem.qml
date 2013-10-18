@@ -317,7 +317,7 @@ Item {
                                     text: model.name
                                     onClicked: {
                                         PopupUtils.close(subredditPopover)
-                                        frontPageItem.resetFlickable()
+                                        if(model.name !== "<b>Custom...</b>") frontPageItem.resetFlickable()
                                         if(model.name === "<b>Frontpage</b>"){
                                             postFeed.subreddit = ''
                                         } else if (model.name === "<b>All</b>") {
@@ -698,8 +698,7 @@ Item {
                 if(pf.atYEnd && !pf.atYBeginning && (postFlickable.contentHeight >= parent.height)) {
                     moreLoaderItem.overflow = pf.contentY - pf.contentHeight + pf.height
                     if ((moreLoaderItem.overflow > moreLoaderItem.loadMoreLength) && !moreLoaderItem.spaceRect) {
-                        var component = Qt.createComponent("SpaceRectangle.qml")
-                        moreLoaderItem.spaceRect = component.createObject(postList, {"height": moreLoaderItem.loadMoreLength})
+                        moreLoaderItem.spaceRect = Qt.createQmlObject("import QtQuick 2.0; Item{width: 1; height: " + moreLoaderItem.loadMoreLength + "}", postList)
                         frontPageItem.loadNext()
                         moreImage.visible = false
                     }

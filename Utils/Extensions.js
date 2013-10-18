@@ -2,11 +2,22 @@
 // Extensions.js -- Extensions for showdown.js in order to render Reddit Markdown well in QML Rich Text
 //
 // Known Bugs/Limitations
-//  *Showdown.js ignores '\' as a way to cancel markdown. Seems that even extensions cannot override this
+//  *Showdown.js ignores '\' as a way to cancel markdown. Seems that even extensions cannot override this.
 //  *Designed for QML Rich Text, not Html. If you're gonna show Reddit Markdown in a browser,
-//   consider using Snuownd.js instead (https://github.com/gamefreak/snuownd)
+//    consider using Snuownd.js instead (https://github.com/gamefreak/snuownd)
 //  *TODO: Links formatted with a space like [this]_(http://www.website.com) are not recognized
+//  *Autolink extension thinks that css rules (e.g. 'timing:ease-out') are URLs.
+//    Bad for /r/web_design and similar sites.
+//    TODO: Make Autolink ignore text inside <code> tags
 //
+
+function simpleFixHtmlChars(text) {
+    //text = text.replace(/&lt;/g, '\<').replace(/&gt;/g, '\>');
+    text = text.replace(/&#0*39;/g, "'");
+    text = text.replace(/&quot;/g, '"');
+    text = text.replace(/&amp;/g, '&');
+    return text
+}
 
 
 //bgColor is simply the background color behind the text, because Markdown Quotes render without a transparent background
@@ -14,7 +25,7 @@
 function getExtensionsObj(bgColor) {
     //To preserve resolution independence. 8[px] on most desktop screens.
     //Requires the Ubuntu SDK. Replace when porting
-    var gridUnits = units.gu(1)
+    var gridUnits = units.gu(1) || 8
 
     //Superscript Extension ('^' in Reddit Markdown)
     //Designed to have nested superscripts if needed
@@ -24,7 +35,7 @@ function getExtensionsObj(bgColor) {
                     {
                         type:"lang",
                         filter: function(text) {
-                            var supRegex = /(\\)?\^([\S]+)\b/gi
+                            var supRegex = /(\\)?\^([\S]+)/gi
                             function supOutput(match, escape, text) {
                                 return escape === "\\" ? "^ " + text : "<sup>" + text + " </sup>"
                             }
@@ -61,6 +72,26 @@ function getExtensionsObj(bgColor) {
         var _quoteBarWidthOffset = quoteBarWidth + 2 //to offset the negative cellpadding
 
         return [
+                    {
+                        //Fix Quote Extension.
+                        //Reddit sends Markdown with HTML safe entities,
+                        // instead of converting all &lt; and &gt; to '<' and '>' respectively, which QML may misinterpret as tags,
+                        // we only convert them when they're to be used in Markdown, such as in blockquotes.
+                        type: 'lang',
+                        filter: function(text) {
+                            return text.replace(/((^[ \t]*(?:&gt;)[ \t]?.+\n(.+\n)*\n*)+)/gm,
+                                                function(match, m1){
+                                                    var gtRegex = /^[ \t]*(>)*(?:&gt;)[ \t]?/gm
+
+                                                    //Individually replace all &gt; at the start of the string to '>'
+                                                    do {
+                                                        match = match.replace(gtRegex, "$1>")
+                                                    } while(match.match(gtRegex))
+
+                                                    return match
+                                                })
+                        }
+                    },
                     { type: 'output', regex: '<blockquote>', replace: '<p style="font-size:' + topMargin + 'px">&nbsp;</p><table cellpadding="-2" style="margin-left:' + _quoteBarWidthOffset + 'px;background-color:' + quoteBarColor + '"><tr><td><table style="background-color:' + bgColor + '"><tr><td style="padding-left:' + leftMargin + 'px">' },
                     { type: 'output', regex: '</blockquote>', replace: '</td></tr></table></td></tr></table>' }
                 ]
@@ -124,6 +155,7 @@ function getExtensionsObj(bgColor) {
                 ]
     }
 
+
     //Fix Italics in Url Extension. Showdown converts the text between underscores in URLs into italicized text; this fixes that behavior.
     var fixItalicsinUrlExt = function(converter) {
         return [
@@ -139,7 +171,26 @@ function getExtensionsObj(bgColor) {
     }
 
 
+    //Fix Entities in Code Extension.
+    //Showdown.js converts all entities in <code> tags to HTML safe characters (e.g. & -> &amp;)
+    // but the Markdown that Reddit sends is already HTML safe, so text is encoded as HTML safe twice!
+    //This extension undoes one level of HTML safety encoding.
+    //Note: Since the Markdown sent is already HTML safe, we only to decode &amp;
+    var fixEntitiesInCodeExt = function(converter) {
+        return [
+                    {
+                        type: 'output',
+                        filter: function(text) {
+                            return text.replace(/<code>([\s\S]*)<\/code>/gm, function(match, text) {
+                                return match.replace(/&amp;/g,"&")
+                            })
+                        }
+                    }
+                ]
+    }
+
+
     return {
-        extensions: [supExt, strikethroughExt, quoteExt, linkExt, fixItalicsinUrlExt]
+        extensions: [supExt, strikethroughExt, quoteExt, linkExt, fixItalicsinUrlExt, fixEntitiesInCodeExt]
     }
 }

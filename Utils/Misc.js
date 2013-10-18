@@ -111,7 +111,7 @@ function htmlspecialchars_decode (string, quote_style) {
 
 
 function getHtmlText(text, color) {
-    var encodedText = htmlspecialchars_decode(text)
+    var encodedText = simpleFixHtmlChars(text)
     var extensionsObj = getExtensionsObj(color)
 
     var converter = new Showdown.converter(extensionsObj)
