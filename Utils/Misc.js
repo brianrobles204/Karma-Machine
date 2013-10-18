@@ -110,9 +110,9 @@ function htmlspecialchars_decode (string, quote_style) {
 }
 
 
-function getHtmlText(text, color, gridUnits) {
+function getHtmlText(text, color) {
     var encodedText = htmlspecialchars_decode(text)
-    var extensionsObj = getExtensionsObj(color, gridUnits)
+    var extensionsObj = getExtensionsObj(color)
 
     var converter = new Showdown.converter(extensionsObj)
     return converter.makeHtml(encodedText)

@@ -22,8 +22,7 @@ MainView {
     backgroundColor: "#dadada"
 
     function getHtmlText(text, color) {
-        var gridUnit = units.gu(1)
-        return MiscUtils.getHtmlText(text, color, gridUnit)
+        return MiscUtils.getHtmlText(text, color)
     }
 
     Layouts { id: dummyLayout; anchors.fill: parent;}
@@ -647,8 +646,6 @@ MainView {
         storageHandler.initialize()
         if(storageHandler.autologin) actionHandler.login(storageHandler.username, storageHandler.passwd)
 
-        //console.log(getHtmlText("this http://en.wikipedia.org is a test bit.ly/foo is a test [lol](goog.le/hamster) mailto:brianrobles204@gmail.com this is a [test](http://www.hamster.com)", "#ff0000"))
-        console.log(getHtmlText("go to this/r/hamster http://www.reddit.com/r/subredditdrama [this] (http://isatest.com)"))
         var component = Qt.createComponent("HeaderArea.qml")
         var header = component.createObject(pageStack.header)
         pageStack.header.__styleInstance.textColor = "#fafafa"

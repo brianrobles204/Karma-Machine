@@ -37,6 +37,7 @@ SwipeBox{
             }
         }
     }
+    onClicked: console.log(commentBody.text)
 
     Rectangle {
         property real size: units.gu(1)
