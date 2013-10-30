@@ -5,19 +5,13 @@
 //  *Showdown.js ignores '\' as a way to cancel markdown. Seems that even extensions cannot override this.
 //  *Designed for QML Rich Text, not Html. If you're gonna show Reddit Markdown in a browser,
 //    consider using Snuownd.js instead (https://github.com/gamefreak/snuownd)
+//    TODO: Look into Snuownd.js as an alternative to Showdown.js.
+//      It needs to be extensible, and within reasonable performance costs. Unfortunately it's not well documented.
 //  *TODO: Links formatted with a space like [this]_(http://www.website.com) are not recognized
 //  *Autolink extension thinks that css rules (e.g. 'timing:ease-out') are URLs.
 //    Bad for /r/web_design and similar sites.
 //    TODO: Make Autolink ignore text inside <code> tags
 //
-
-function simpleFixHtmlChars(text) {
-    //text = text.replace(/&lt;/g, '\<').replace(/&gt;/g, '\>');
-    text = text.replace(/&#0*39;/g, "'");
-    text = text.replace(/&quot;/g, '"');
-    text = text.replace(/&amp;/g, '&');
-    return text
-}
 
 
 //bgColor is simply the background color behind the text, because Markdown Quotes render without a transparent background
@@ -25,7 +19,9 @@ function simpleFixHtmlChars(text) {
 function getExtensionsObj(bgColor) {
     //To preserve resolution independence. 8[px] on most desktop screens.
     //Requires the Ubuntu SDK. Replace when porting
-    var gridUnits = units.gu(1) || 8
+    var gridComponent = Qt.createQmlObject("import QtQuick 2.0; import Ubuntu.Components 0.1; Item{ height: units.gu(1)}", Qt.application)
+    var gridUnits = gridComponent.height
+    gridComponent.destroy()
 
     //Superscript Extension ('^' in Reddit Markdown)
     //Designed to have nested superscripts if needed
@@ -58,10 +54,7 @@ function getExtensionsObj(bgColor) {
     }
 
 
-    //Quotes Extension ('>' in Markdown). Makes quotes readable and aesthetic in QML Rich Text
-    //Large hack because QML Rich Text does not recognize background colors for individual table cells,
-    //  nor background images at all it seems. Can't seem to set height either.
-    //Solved by creating a table with our quoteBarColor background, then creating a table inside the table with our text and the normal background.
+    //Quotes Extension ('>' in Markdown).
     var quoteExt = function(converter) {
         var quoteBarColor = "#999999"
         var quoteBarWidth = gridUnits*0.15
@@ -92,6 +85,10 @@ function getExtensionsObj(bgColor) {
                                                 })
                         }
                     },
+                    //QML Quotes Extension.  Makes quotes readable and aesthetic in QML Rich Text
+                    //Large hack because QML Rich Text does not recognize background colors for individual table cells,
+                    //  nor background images at all it seems. Can't seem to set height either.
+                    //Solved by creating a table with our quoteBarColor background, then creating a table inside the table with our text and the normal background.
                     { type: 'output', regex: '<blockquote>', replace: '<p style="font-size:' + topMargin + 'px">&nbsp;</p><table cellpadding="-2" style="margin-left:' + _quoteBarWidthOffset + 'px;background-color:' + quoteBarColor + '"><tr><td><table style="background-color:' + bgColor + '"><tr><td style="padding-left:' + leftMargin + 'px">' },
                     { type: 'output', regex: '</blockquote>', replace: '</td></tr></table></td></tr></table>' }
                 ]
@@ -173,7 +170,7 @@ function getExtensionsObj(bgColor) {
 
     //Fix Entities in Code Extension.
     //Showdown.js converts all entities in <code> tags to HTML safe characters (e.g. & -> &amp;)
-    // but the Markdown that Reddit sends is already HTML safe, so text is encoded as HTML safe twice!
+    //  but the Markdown that Reddit sends is already HTML safe, so text is encoded as HTML safe twice!
     //This extension undoes one level of HTML safety encoding.
     //Note: Since the Markdown sent is already HTML safe, we only to decode &amp;
     var fixEntitiesInCodeExt = function(converter) {

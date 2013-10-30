@@ -78,7 +78,7 @@ SwipeBox{
 
     Label {
         id: commentBody
-        text: internalModel ? getHtmlText(internalModel.data.body, bgRect.color) : ""
+        text: internalModel ? MiscUtils.getHtmlText(internalModel.data.body, bgRect.color) : ""
         textFormat: Text.RichText
         anchors {
             top: commentInfoLabel.bottom

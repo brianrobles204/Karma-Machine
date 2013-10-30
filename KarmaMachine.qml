@@ -6,7 +6,7 @@ import Ubuntu.Components.ListItems 0.1 as ListItem
 import Ubuntu.Components.Popups 0.1
 import Ubuntu.Layouts 0.1
 import "Utils/Misc.js" as MiscUtils
-import "Utils/Showdown.js" as ShowdownUtils
+import "QReddit/QReddit.js" as QReddit
 
 MainView {
     objectName: "mainView"
@@ -20,10 +20,6 @@ MainView {
     height: units.gu(71)
 
     backgroundColor: "#dadada"
-
-    function getHtmlText(text, color) {
-        return MiscUtils.getHtmlText(text, color)
-    }
 
     Layouts { id: dummyLayout; anchors.fill: parent;}
     property bool isPhone: dummyLayout.width <= units.gu(85)
@@ -60,7 +56,7 @@ MainView {
                 Label {
                     property string testText: "&gt;te&lt;s&gt;lol&lt;/s&gt;t\n
 &gt;&gt;test &gt;this&gt; is a &gt;&gt;test"
-                    text: getHtmlText(testText, "#fafafa")
+                    text: MiscUtils.getHtmlText(testText, "#fafafa")
                     anchors.fill: parent
                     anchors.margins: units.gu(1)
                     wrapMode: Text.WordWrap
@@ -627,7 +623,7 @@ MainView {
             var res = "";
             db.transaction(function(tx) {
                 var rs = tx.executeSql('INSERT OR REPLACE INTO settings VALUES (?,?);', [setting,value]);
-                      //console.log(rs.rowsAffected)
+                      //-console.log(rs.rowsAffected)
                       if (rs.rowsAffected > 0) {
                         res = "OK";
                       } else {
@@ -662,13 +658,14 @@ MainView {
 
     Component.onCompleted: {
         storageHandler.initialize()
-        if(storageHandler.autologin) actionHandler.login(storageHandler.username, storageHandler.passwd)
+        //if(storageHandler.autologin) actionHandler.login(storageHandler.username, storageHandler.passwd)
 
         var component = Qt.createComponent("HeaderArea.qml")
         var header = component.createObject(pageStack.header)
         pageStack.header.__styleInstance.textColor = "#fafafa"
         pageStack.header.__styleInstance.separatorSource = "media/PageHeaderBaseDividerLight.sci"
-        //header.clicked.connect(headerAddition.additionOpenCall)
+
+        QReddit.debugTest()
     }
 
 }

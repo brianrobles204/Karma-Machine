@@ -1,4 +1,5 @@
 {
+    "architecture": "armhf",
     "description": "A Reddit app: View the frontpage of the internet on your Ubuntu touch device.",
     "framework": "ubuntu-sdk-13.10",
     "hooks": {
@@ -10,5 +11,5 @@
     "maintainer": "",
     "name": "com.ubuntu.developer.brianrobles204.karma-machine",
     "title": "Karma Machine",
-    "version": "0.7"
+    "version": "0.751"
 }

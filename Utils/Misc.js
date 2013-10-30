@@ -1,4 +1,3 @@
-//.pragma library
 Qt.include("Showdown.js")
 Qt.include("Extensions.js")
 
@@ -44,6 +43,13 @@ function clamp(x, min, max) {
         // swap min/max if min > max
         return clamp(x, max, min);
     }
+}
+
+function simpleFixHtmlChars(text) {
+    text = text.replace(/&#0*39;/g, "'");
+    text = text.replace(/&quot;/g, '"');
+    text = text.replace(/&amp;/g, '&');
+    return text
 }
 
 

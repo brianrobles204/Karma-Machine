@@ -255,24 +255,39 @@ Item {
         }
     }
 
-    Rectangle {
-        id: linkProgressBar
-        height: units.gu(0.5)
-        width: {
-            if (webSection.loadProgress !== 100) {
-                var progressWidth = ((webSection.loadProgress)/100)*parent.width
-                return minWidth > progressWidth ? minWidth : progressWidth
-            } else {
-                return 0
-            }
+    //Wrapper to ensure that the left edge of the progressbar is always straight and not rounded (by using clip: true)
+    Item{
+        anchors {
+            top: isPhone ? postHeader.bottom : postPageItem.top
+            topMargin: isPhone ? 0 : postHeader.height
+            left: parent.left
+            right: parent.right
+            rightMargin: -linkProgressBar.radius
         }
-        anchors.top: isPhone ? postHeader.bottom : postPageItem.top
-        anchors.topMargin: isPhone ? 0 : postHeader.height
-        visible: webSection.loading
-        color: "orange"
+        height: linkProgressBar.height
+        clip: true
 
-        property real minWidth: units.gu(2)
-        Behavior on width { UbuntuNumberAnimation{} }
+        Rectangle {
+            id: linkProgressBar
+            height: units.gu(0.5)
+            radius: height/2
+            width: {
+                if (webSection.loadProgress !== 100) {
+                    var progressWidth = ((webSection.loadProgress)/100)*parent.width
+                    return minWidth > progressWidth ? minWidth : progressWidth
+                } else {
+                    return 0
+                }
+            }
+            anchors.top: parent.top
+            anchors.left: parent.left
+            anchors.leftMargin: -radius
+            visible: webSection.loading
+            color: "orange"
+
+            property real minWidth: units.gu(2)
+            Behavior on width { UbuntuNumberAnimation{} }
+        }
     }
 
     Flickable {

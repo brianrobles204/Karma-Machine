@@ -1,5 +1,6 @@
 import QtQuick 2.0
 import Ubuntu.Components 0.1
+import "Utils/Misc.js" as MiscUtils
 
 SwipeBox{
     id: swipeBox
@@ -92,7 +93,7 @@ SwipeBox{
             }
 
             property variant post: swipeBox.internalModel
-            text: post ? getHtmlText(post.data.selftext, "#fafafa") : ""
+            text: post ? MiscUtils.getHtmlText(post.data.selftext, "#fafafa") : ""
             textFormat: Text.RichText
             fontSize: "small"
             wrapMode: Text.Wrap
