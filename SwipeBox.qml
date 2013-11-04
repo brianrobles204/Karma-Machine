@@ -3,24 +3,17 @@ import Ubuntu.Components 0.1
 
 Flickable {
     id: swipeBox
-    width: parent.width
 
-    flickableDirection: Flickable.HorizontalFlick
     property real maxFlickDist: units.gu(8)
     property bool isPressed: false
-    interactive: false
 
     signal swipedLeft
     signal swipedRight
     signal clicked
 
-    MouseArea {
-        id: mouseArea
-        anchors.fill: parent
-        onPressed: swipeBox.interactive = true
-        onReleased: swipeBox.interactive = false
-        onCanceled: if(!swipeBox.isPressed) swipeBox.interactive = false
-    }
+    width: parent.width
+    interactive: false
+    flickableDirection: Flickable.HorizontalFlick
 
     onContentXChanged: {
         if(contentX > maxFlickDist || contentX < -maxFlickDist) {
@@ -43,6 +36,14 @@ Flickable {
 
     Component.onCompleted: {
         mouseArea.clicked.connect(clicked)
+    }
+
+    MouseArea {
+        id: mouseArea
+        anchors.fill: parent
+        onPressed: swipeBox.interactive = true
+        onReleased: swipeBox.interactive = false
+        onCanceled: if(!swipeBox.isPressed) swipeBox.interactive = false
     }
 }
 

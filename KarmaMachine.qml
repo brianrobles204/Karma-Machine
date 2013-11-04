@@ -29,6 +29,9 @@ MainView {
     property variant currentPage: pageStack.currentPage
     property bool canBeToggled: postPageItem.canBeToggled
 
+    property var redditObj: new QReddit.QReddit("Karma Machine Reddit App 0.78", "karma-machine")
+    property var redditNotifier: redditObj.notifier
+
     function togglePostPageItem() {
         postPageItem.toggle()
     }
@@ -386,7 +389,6 @@ MainView {
         property string loginStatus: "none"
         property string loginError: ""
 
-        Component.onCompleted: frontPageItem.reloadFrontPage()
         signal finishedLoading
 
         function upvote(name) {
@@ -615,7 +617,6 @@ MainView {
                 }
             }
             tmpIsInitialized = true
-            frontPageItem.reloadFrontPage()
         }
 
         function setSetting(setting, value) {
@@ -659,13 +660,13 @@ MainView {
     Component.onCompleted: {
         storageHandler.initialize()
         //if(storageHandler.autologin) actionHandler.login(storageHandler.username, storageHandler.passwd)
+        var Reddit = redditObj
+        Reddit.loginActiveUser();
 
         var component = Qt.createComponent("HeaderArea.qml")
         var header = component.createObject(pageStack.header)
         pageStack.header.__styleInstance.textColor = "#fafafa"
         pageStack.header.__styleInstance.separatorSource = "media/PageHeaderBaseDividerLight.sci"
-
-        QReddit.debugTest()
     }
 
 }

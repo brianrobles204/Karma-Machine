@@ -4,16 +4,14 @@ import Ubuntu.Components.ListItems 0.1 as ListItems
 import Ubuntu.Components.Popups 0.1
 
 Item {
-    property variant internalModel
-    height: childrenRect.height + units.gu(0.4)
-    anchors{
-        left: parent.left
-        right: parent.right
-    }
+    property var internalModel
 
     function reload() {
-        commentsFeed.reload()
+        commentsList.loadComments()
     }
+
+    height: childrenRect.height + units.gu(0.4)
+    anchors { left: parent.left; right: parent.right }
 
     DescItem {
         id: descItem
@@ -82,7 +80,7 @@ Item {
             }
             Label {
                 id: sortingLabel
-                text: dict[commentsFeed.sort]
+                text: dict[storageHandler.commentsSort]
                 fontSize: "small"
                 font.weight: Font.DemiBold
                 anchors.right: openIcon.left
@@ -97,6 +95,7 @@ Item {
             }
         }
     }
+
     Component {
         id: sortingPopupComponent
         Popover {
@@ -129,7 +128,6 @@ Item {
                             PopupUtils.close(sortingPopover)
                             storageHandler.setProp('commentsSort', sort)
                             sortingLabel.text = name
-                            //commentsFeed.sort = sort
                         }
                     }
                 }
@@ -137,20 +135,56 @@ Item {
         }
     }
 
-    CommentsModel {
-        id: commentsFeed
-        article: internalModel ? internalModel.data.id : ""
-        limit: 40
-        sort: storageHandler.commentsSort
-
-        onAppendCalled: {
-            var cModel = get(count -1)
-            var height = createComments(cModel, 1)
+    Column {
+        id: commentsList
+        property var internalModel: parent.internalModel
+        property bool loading: true
+        anchors {
+            top: spaceAndCommentInfo.bottom
+            topMargin: units.gu(0.5)
+            left: parent.left
+            right: parent.right
+            leftMargin: units.gu(1.5)
+            rightMargin: units.gu(1.5)
         }
-        function createComments(cModel, level) {
+
+        onInternalModelChanged: {
+            loadComments()
+        }
+
+        Connections {
+            target: storageHandler
+            onCommentsSortChanged: {
+                commentsList.loadComments()
+            }
+        }
+
+        function clearComments() {
+            if(commentsList.children.length > 0) {
+                for (var i = 0; i < commentsList.children.length; i++) {
+                    commentsList.children[i].destroy()
+                }
+            }
+        }
+
+        function loadComments() {
+            clearComments()
+            loading = true
+            if (internalModel == undefined) return
+
+            var commentsConnObj = internalModel.getCommentsListing(storageHandler.commentsSort)
+            commentsConnObj.onSuccess.connect(function(){
+                loading = false
+                for (var i = 0; i < commentsConnObj.response.length; i++) {
+                    createComment(commentsConnObj.response[i], 1)
+                }
+            });
+        }
+
+        function createComment(cModel, level) {
             if(cModel.kind == "t1"){
                 var component = Qt.createComponent("CommentsItem.qml")
-                var commentItem = component.createObject(commentsColumn, {"internalModel": cModel})
+                var commentItem = component.createObject(commentsList, {"internalModel": cModel})
                 if(commentItem == null) {
                     console.log("Error creating object")
                 }
@@ -163,11 +197,11 @@ Item {
                 if(cModel.data.replies.data !== undefined) {
                     var childComments = cModel.data.replies.data.children
                     for (var i = 0; i < childComments.length; i++){
-                        addToHeight += createComments(childComments[i], level + 1)
+                        addToHeight += createComment(childComments[i], level + 1)
                     }
                 }
 
-                var spaceRect = Qt.createQmlObject("import QtQuick 2.0; Item{width: 1; height: units.gu(0.6)}", commentsColumn)
+                var spaceRect = Qt.createQmlObject("import QtQuick 2.0; Item{width: 1; height: units.gu(0.6)}", commentsList)
                 if (level === 1) spaceRect.height = units.gu(1)
                 commentItem.bgRect.height = addToHeight - units.gu(0.6)
 
@@ -177,37 +211,15 @@ Item {
                 return 0
             }
         }
-
-        onStatusChanged: {
-            if (!status) {
-                if(commentsColumn.children.length > 0) {
-                    for (var i = 0; i < commentsColumn.children.length; i++) {
-                        commentsColumn.children[i].destroy()
-                    }
-                }
-            }
-        }
-    }
-
-    Column {
-        id: commentsColumn
-        anchors {
-            top: spaceAndCommentInfo.bottom
-            topMargin: units.gu(0.5)
-            left: parent.left
-            right: parent.right
-            leftMargin: units.gu(1.5)
-            rightMargin: units.gu(1.5)
-        }
     }
 
     ActivityIndicator{
         anchors {
-            top: commentsColumn.bottom
+            top: commentsList.bottom
             horizontalCenter: parent.horizontalCenter
         }
         width: units.gu(3.5)
         height: units.gu(3.5)
-        running: commentsFeed.status !== true
+        running: commentsList.loading
     }
 }

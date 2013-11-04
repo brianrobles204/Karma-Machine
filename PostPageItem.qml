@@ -7,7 +7,7 @@ import "Utils/Misc.js" as MiscUtils
 Item {
     id: postPageItem
 
-    property variant internalModel: null
+    property var internalModel: null
     property Flickable flickable
     property WebView __webSection: webSection
     property string webUrl: webSection.url
@@ -182,11 +182,6 @@ Item {
         y: isAtEnd ? -commentsPeekItem.height : isPhone ? 0 : pageStack.header.height
         smooth: false
 
-        /*Connections {
-            target: postPageItem
-            onInternalModelChanged: if(internalModel) webSection.clearOpen(internalModel.data.url)
-        }*/
-
         property bool isAtEnd: false
         property bool protectHiding: false
         property string title: ""
@@ -255,8 +250,8 @@ Item {
         }
     }
 
-    //Wrapper to ensure that the left edge of the progressbar is always straight and not rounded (by using clip: true)
     Item{
+        //Wrapper to ensure that the left edge of the progressbar is always straight and not rounded (by using clip: true)
         anchors {
             top: isPhone ? postHeader.bottom : postPageItem.top
             topMargin: isPhone ? 0 : postHeader.height

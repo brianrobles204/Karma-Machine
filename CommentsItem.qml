@@ -4,8 +4,10 @@ import "Utils/Misc.js" as MiscUtils
 
 SwipeBox{
     id: swipeBox
-    property variant internalModel
+    property var internalModel
     property Rectangle bgRect: bgRect
+    property string vote: internalModel.data.likes === true ? "up" : internalModel.data.likes === false ? "down" : ""
+
     anchors {
         left: parent.left
         leftMargin: units.gu(1)
@@ -13,7 +15,6 @@ SwipeBox{
         rightMargin: units.gu(1)
     }
     height: commentInfoLabel.height + commentBody.height + units.gu(2.5)
-    property string vote: internalModel.data.likes === true ? "up" : internalModel.data.likes === false ? "down" : ""
 
     onSwipedRight: {
         if(storageHandler.modhash !== "") {

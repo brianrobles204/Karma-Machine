@@ -4,7 +4,7 @@ import "Utils/Misc.js" as MiscUtils
 
 SwipeBox{
     id: swipeBox
-    property variant internalModel
+    property var internalModel
     height: descHeader.height + divider.height + descContent.height
     anchors {
         left: parent.left

@@ -10,27 +10,14 @@ Item {
     id: frontPageItem
     property variant header
     property variant flickable: postFlickable
-    property string title: (headerAddition.isOpen && header.flickable == postFlickable) ? "Karma Machine" : postFeed.subreddit == "" ? "FrontPage" : postFeed.subreddit
+    property string title: (headerAddition.isOpen && header.flickable == postFlickable) ? "Karma Machine" : postList.subreddit == "" ? "FrontPage" : postList.subreddit
 
     function toggleHeaderAddition() {
         headerAddition.isOpen = !headerAddition.isOpen
     }
 
-    function loadNext() {
-        postFeed.ignoreClearFlag = true
-        postFeed.after = postFeed.lastArticleId
-    }
-
     function reloadFrontPage() {
-        resetFlickable()
-        postFeed.reload()
-    }
-
-    function resetFlickable() {
-        headerAddition.isOpen = false
-        postFeed.clearCalled()
-        postFlickable.contentY = -frontPageItem.header.height - units.gu(1)
-        headerAddition.isOpen = true
+        postList.loadSubreddit()
     }
 
     Flickable {
@@ -50,42 +37,87 @@ Item {
             }
         }
 
-        PostModel {
-            id: postFeed
-            limit: 25
-            filter: 'hot'
+        Column {
+            id: postList
 
-            // Post Items must be added dynamically instead of using delegates because the latter causes framerate drops
-            onAppendCalled: {
-                var component = Qt.createComponent("PostItem.qml")
-                var postItem = component.createObject(postList, {"internalModel": get(count - 1), "clip": true})
-                if (postItem == null) {
-                    console.log("Error creating object")
+            property var subredditObj
+            readonly property string subreddit: subredditObj ? subredditObj.srName : ""
+            property bool loading
+
+            function _appendPosts(postsArray) {
+                //Generate stuff here
+                for (var i = 0; i < postsArray.length; i++) {
+                    var component = Qt.createComponent("PostItem.qml")
+                    var postItem = component.createObject(postList, {"internalModel": postsArray[i], "clip": true})
+                    if (postItem == null) {
+                        console.log("Error creating object")
+                    }
                 }
             }
-            onClearCalled: {
-                console.log(subreddit)
+
+            function _loadSubredditListing(srName, sort, paramObj) {
+                clearListing()
+                loading = true
+
+                var metaSubredditObj
+                if (subredditObj && subreddit === srName) {
+                    metaSubredditObj = subredditObj
+                } else {
+                    metaSubredditObj = subredditObj = redditObj.getSubreddit(srName || "")
+                }
+
+                paramObj = paramObj || {}
+                var subrConnObj = metaSubredditObj.getPostsListing(sort || 'hot', paramObj)
+                subrConnObj.onSuccess.connect(function(response){
+                    _appendPosts(subrConnObj.response)
+                    loading = false
+                })
+            }
+
+            function loadSubreddit(srName) {
+                _loadSubredditListing(srName)
+            }
+
+            function loadParamObj(sort, paramObj) {
+                _loadSubredditListing(subreddit, sort, paramObj)
+            }
+
+            function clearListing() {
+                headerAddition.isOpen = false
+
                 if(postList.children.length > 0) {
                     for (var i = 0; i < postList.children.length; i++) {
                         if(postList.children[i] !== headerAdditionRect) postList.children[i].destroy()
                     }
                 }
                 moreLoaderItem.spaceRect = null
-            }
-            onIgnoreUsed: {
-                if(moreLoaderItem.spaceRect != null) {
-                    moreLoaderItem.spaceRect.destroy()
-                    moreLoaderItem.spaceRect = null
-                }
-                moreImage.visible = true
-            }
-        }
 
-        Column {
-            id: postList
+                postFlickable.contentY = -frontPageItem.header.height - units.gu(0.25)
+                headerAddition.isOpen = true
+            }
+
+            function loadMore() {
+                var moreConnObj = subredditObj.getMoreListing()
+                moreConnObj.onSuccess.connect(function(){
+                    if(moreLoaderItem.spaceRect != null) {
+                        moreLoaderItem.spaceRect.destroy()
+                        moreLoaderItem.spaceRect = null
+                    }
+                    moreImage.visible = true
+                    postList._appendPosts(moreConnObj.response)
+                })
+            }
+
             anchors.top: parent.top
             anchors.left: parent.left
             anchors.right: parent.right
+
+            Component.onCompleted: {
+                redditNotifier.onAuthenticatingChanged.connect(function(){
+                    var authStatus = redditNotifier.authenticating
+                    if (authStatus === 'none' || authStatus === 'done') postList.loadSubreddit()
+                });
+            }
 
             Item {
                 id: headerAdditionRect
@@ -224,7 +256,7 @@ Item {
 
                 Label {
                     id: subredditSwitcher
-                    text: postFeed.subreddit == "" ? "Frontpage" : postFeed.subreddit
+                    text: postList.subreddit == "" ? "Frontpage" : postList.subreddit
                     anchors.left: parent.left
                     color: pressed ? UbuntuColors.orange : UbuntuColors.coolGrey
                     fontSize: "large"
@@ -317,15 +349,14 @@ Item {
                                     text: model.name
                                     onClicked: {
                                         PopupUtils.close(subredditPopover)
-                                        if(model.name !== "<b>Custom...</b>") frontPageItem.resetFlickable()
                                         if(model.name === "<b>Frontpage</b>"){
-                                            postFeed.subreddit = ''
+                                            postList.loadSubreddit()
                                         } else if (model.name === "<b>All</b>") {
-                                            postFeed.subreddit = 'All'
+                                            postList.loadSubreddit('All')
                                         }  else if (model.name === "<b>Custom...</b>") {
                                             PopupUtils.open(customSubRDialogComponent)
                                         } else {
-                                            postFeed.subreddit = model.name
+                                            postList.loadSubreddit(model.name)
                                         }
                                     }
                                 }
@@ -343,11 +374,10 @@ Item {
 
                          Component.onCompleted: customSubRTextField.forceActiveFocus()
                          function openSubreddit() {
-                             frontPageItem.resetFlickable()
                              var name = customSubRTextField.text
                              var lowerCaseName = name.toLowerCase()
                              var firstToUpName = lowerCaseName.substr(0, 1).toUpperCase() + lowerCaseName.substr(1)
-                             postFeed.subreddit = firstToUpName
+                             postList.loadSubreddit(firstToUpName)
                              PopupUtils.close(customSubRDialog)
                          }
 
@@ -446,10 +476,10 @@ Item {
                                     text: name
                                     onClicked: {
                                         PopupUtils.close(sortingPopover)
-                                        frontPageItem.resetFlickable()
                                         sortingSwitcher.text = name
-                                        postFeed.time = t
-                                        postFeed.filter = sort
+                                        var paramObj = {}
+                                        if (t !== "") paramObj.t = t
+                                        postList.loadParamObj(sort, paramObj);
                                     }
                                 }
                             }
@@ -527,7 +557,7 @@ Item {
                                     visible: storageHandler.modhash != ""
                                     onClicked: {
                                         PopupUtils.close(userPopover)
-                                        frontPageItem.resetFlickable()
+                                        postList.loadSubreddit()
                                         actionHandler.logout()
                                     }
                                 }
@@ -643,7 +673,7 @@ Item {
                          onFinishedLoading: {
                              loginIndicator.visible = false
                              if (actionHandler.loginError == "") {
-                                 frontPageItem.resetFlickable()
+                                 postList.loadSubreddit()
                                  PopupUtils.close(userDialog)
                              } else {
                                  actionHandler.logout()
@@ -671,7 +701,7 @@ Item {
         anchors.centerIn: parent
         width: units.gu(5)
         height: units.gu(5)
-        running: postFeed.status !== true
+        running: postList.loading || redditNotifier.authenticating === 'loading'
         z: -1
     }
 
@@ -700,7 +730,7 @@ Item {
                     moreLoaderItem.overflow = pf.contentY - pf.contentHeight + pf.height
                     if ((moreLoaderItem.overflow > moreLoaderItem.loadMoreLength) && !moreLoaderItem.spaceRect) {
                         moreLoaderItem.spaceRect = Qt.createQmlObject("import QtQuick 2.0; Item{width: 1; height: " + moreLoaderItem.loadMoreLength + "}", postList)
-                        frontPageItem.loadNext()
+                        postList.loadMore()
                         moreImage.visible = false
                     }
                 } else {

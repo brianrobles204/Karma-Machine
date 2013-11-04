@@ -3,7 +3,7 @@ import Ubuntu.Components 0.1
 
 SwipeBox{
     id: swipeBox
-    property variant internalModel
+    property var internalModel
     height: headerAdditionHolder.height + postBox.height + divider.height
     width: parent.width
     property string vote: internalModel.data.likes === true ? "up" : internalModel.data.likes === false ? "down" : ""
