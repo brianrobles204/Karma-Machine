@@ -3,6 +3,7 @@ import QtGraphicalEffects 1.0
 import Ubuntu.Components 0.1
 import Ubuntu.Components.ListItems 0.1 as ListItems
 import Ubuntu.Components.Popups 0.1
+import "CustomListItems" as CustomListItems
 import "Utils/Misc.js" as MiscUtils
 import "JSONListModel" as JSON
 
@@ -92,7 +93,7 @@ Item {
                 }
                 moreLoaderItem.spaceRect = null
 
-                postFlickable.contentY = -frontPageItem.header.height - units.gu(0.25)
+                postFlickable.contentY = -frontPageItem.header.height - 1
                 headerAddition.isOpen = true
             }
 
@@ -112,30 +113,35 @@ Item {
             anchors.left: parent.left
             anchors.right: parent.right
 
-            Component.onCompleted: {
-                redditNotifier.onAuthenticatingChanged.connect(function(){
-                    var authStatus = redditNotifier.authenticating
-                    if (authStatus === 'none' || authStatus === 'done') postList.loadSubreddit()
-                });
-            }
+            /*Connections {
+                target: redditNotifier
+                onAuthStatusChanged: {
+                    var authStatus = redditNotifier.authStatus
+                    if (authStatus === 'none' || authStatus === 'done') {
+                        postList.loadSubreddit()
+                    } else if (authStatus === 'loading' || authStatus === 'clear') {
+                        postList.clearListing()
+                    }
+                }
+            }*/
 
             Item {
                 id: headerAdditionRect
-                width: 1
-                height: 0
                 property bool isOpen
-                Behavior on height {UbuntuNumberAnimation{}}
+
                 function giveSpace() { isOpen = true; height = units.gu(12) }
                 function hideSpace() { isOpen = false; height = 0 }
+
+                width: 1; height: 0
+
+                Behavior on height {UbuntuNumberAnimation{}}
             }
         }
     }
 
     Item {
         id: headerAddition
-        //color: "#f3f3f3"
         smooth: true
-        //radius: units.gu(0.2)
         z: 100
         state: "headerClosed"
 
@@ -143,9 +149,8 @@ Item {
         property bool enableBehavior
         property variant targetPostItem: null
         property real prevContentY: 0
-        //property Flickable flickable: postFlickable
 
-        Component.onCompleted: isOpen = true
+        //Component.onCompleted: isOpen = true
 
         Connections {
             target: postFlickable
@@ -191,7 +196,7 @@ Item {
                         if(frontPageItem.header.y <= -frontPageItem.header.height) {
                             return -units.gu(5.5)
                         } else {
-                            return frontPageItem.header.y + frontPageItem.header.height
+                            return frontPageItem.header.y + frontPageItem.header.height + units.gu(1)
                         }
                     }
                     width: parent.width
@@ -521,7 +526,7 @@ Item {
                     }
                     Label {
                         id: userName
-                        text: storageHandler.tmpUsername
+                        text: redditNotifier.activeUser //storageHandler.tmpUsername
                         anchors {
                             top: userImg.bottom
                             horizontalCenter: parent.horizontalCenter
@@ -537,16 +542,45 @@ Item {
                         id: userPopupComponent
                         Popover {
                             id: userPopover
-                            Column {
-                                anchors {
-                                    top: parent.top
-                                    left: parent.left
-                                    right: parent.right
-                                }
+                            ListView {
+                                anchors { top: parent.top; left: parent.left; right: parent.right }
                                 height: childrenRect.height
-                                ListItems.Standard {
+                                header: Column {
+                                    anchors { left: parent.left; right: parent.right}
+                                    height: childrenRect.height
+                                    CustomListItems.Header {
+                                        text: 'User ' + redditNotifier.activeUser
+                                    }
+                                    ListItems.Standard {
+                                        text: 'Profile'
+                                        visible: redditNotifier.isLoggedIn
+                                        onClicked: {
+                                            console.log("profile")
+                                        }
+                                    }
+                                    ListItems.Standard {
+                                        text: 'Messages'
+                                        visible: redditNotifier.isLoggedIn
+                                        onClicked: {
+                                            console.log("messages")
+                                        }
+                                    }
+                                    ListItems.Standard {
+                                        text: 'Saved'
+                                        visible: redditNotifier.isLoggedIn
+                                        onClicked: {
+                                            console.log("saved")
+                                        }
+                                    }
+                                    CustomListItems.Header {
+                                        text: 'Other Users'
+                                    }
+                                    ListItems.ThinDivider{}
+                                }
+
+                                /*ListItems.Standard {
                                     text: 'Login'
-                                    visible: storageHandler.modhash == ""
+                                    visible: !redditNotifier.isLoggedIn
                                     onClicked: {
                                         PopupUtils.close(userPopover)
                                         PopupUtils.open(userDialogComponent)
@@ -554,12 +588,22 @@ Item {
                                 }
                                 ListItems.Standard {
                                     text: 'Logout'
-                                    visible: storageHandler.modhash != ""
+                                    visible: redditNotifier.isLoggedIn
                                     onClicked: {
                                         PopupUtils.close(userPopover)
-                                        postList.loadSubreddit()
-                                        actionHandler.logout()
+                                        var logoutConnObj = redditObj.logout()
+                                        logoutConnObj.onSuccess.connect(function(){
+                                            postList.loadSubreddit()
+                                        })
                                     }
+                                }*/
+
+                                model: ListModel {
+                                    ListElement {name: "test"}
+                                }
+
+                                delegate: ListItems.Standard {
+                                    text: name
                                 }
                             }
                         }
@@ -594,13 +638,24 @@ Item {
              text: "The Frontpage of the Internet"
 
              Component.onCompleted: usernameTextField.forceActiveFocus()
+
              function startLogin() {
                  if (usernameTextField.text == "" || passwordTextField.text == "") return true;
                  usernameTextField.focus = false
                  passwordTextField.focus = false
                  loginIndicator.visible = true
-                 storageHandler.setProp('autologin', rememberCheckBox.checked)
-                 var loginResponse = actionHandler.login(usernameTextField.text, passwordTextField.text)
+                 /*storageHandler.setProp('autologin', rememberCheckBox.checked)
+                 var loginResponse = actionHandler.login(usernameTextField.text, passwordTextField.text)*/
+                 var loginConnObj = redditObj.loginNewUser(usernameTextField.text, passwordTextField.text)
+                 loginConnObj.onSuccess.connect(function(){
+                     postList.loadSubreddit()
+                     PopupUtils.close(userDialog)
+                 })
+                 loginConnObj.onError.connect(function(errorMessage){
+                     usernameTextField.text = ""
+                     passwordTextField.text = ""
+                     userDialog.text = errorMessage
+                 })
              }
 
              TextField {
@@ -616,7 +671,7 @@ Item {
                  echoMode: TextInput.Password
                  onAccepted: userDialog.startLogin()
              }
-             MouseArea {
+             /*MouseArea {
                  anchors{
                      left: parent.left
                      leftMargin: units.gu(2)
@@ -638,9 +693,9 @@ Item {
                          verticalCenter: rememberCheckBox.verticalCenter
                      }
                  }
-             }
+             }*/
 
-             Item{ width: parent.width; height: units.gu(1)} //simple hack for extra spacing
+             //Item{ width: parent.width; height: units.gu(1)} //simple hack for extra spacing
              Item {
                  width: parent.width
                  height: childrenRect.height
@@ -668,7 +723,7 @@ Item {
                      onClicked: userDialog.startLogin()
                      anchors.right: parent.right
 
-                     Connections {
+                     /*Connections {
                          target: actionHandler
                          onFinishedLoading: {
                              loginIndicator.visible = false
@@ -682,7 +737,7 @@ Item {
                                  userDialog.text = actionHandler.loginError
                              }
                          }
-                     }
+                     }*/
                  }
              }
          }
@@ -701,7 +756,7 @@ Item {
         anchors.centerIn: parent
         width: units.gu(5)
         height: units.gu(5)
-        running: postList.loading || redditNotifier.authenticating === 'loading'
+        running: postList.loading || redditNotifier.authStatus === 'loading'
         z: -1
     }
 

@@ -15,7 +15,7 @@ MainView {
     automaticOrientation: true
     anchorToKeyboard: true
 
-    width: units.gu(42)
+    width: units.gu(45)
     //width: units.gu(120)
     height: units.gu(71)
 
@@ -660,8 +660,11 @@ MainView {
     Component.onCompleted: {
         storageHandler.initialize()
         //if(storageHandler.autologin) actionHandler.login(storageHandler.username, storageHandler.passwd)
-        var Reddit = redditObj
-        Reddit.loginActiveUser();
+        var loginConnObj = redditObj.loginActiveUser()
+        loginConnObj.onSuccess.connect(function(){
+            frontPageItem.reloadFrontPage()
+        })
+
 
         var component = Qt.createComponent("HeaderArea.qml")
         var header = component.createObject(pageStack.header)

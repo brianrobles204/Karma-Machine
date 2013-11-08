@@ -2,6 +2,7 @@
 var API = {
     //*Links and Comments
     'login': '/api/login',
+    'logout': '/logout',
     'comment': '/api/comment',
     'del': '/api/del',
     'editusertext': '/api/editusertext',
@@ -98,49 +99,50 @@ function createObject(ObjectStr) {
     return component.createObject(Qt.application);
 }
 
+
 var BaseReddit = function(userAgent) {
     this.modhash = "";
 
-    this._getConnection = function(method, url) {
-        var http = new XMLHttpRequest();
-        var connObj = createObject("ConnectionObject.qml");
-        var timeout = 30000;
+    this._getConnection = function(method, url, actionObj) {
+        var request = new XMLHttpRequest();
+        //var connObj = createObject("ConnectionObject.qml");
+        //var timeout = 30000;
         console.log(url);
 
-        var timer = Qt.createQmlObject('import QtQuick 2.0; Timer{ interval: ' + timeout + '; running: true; repeat: false}', Qt.application);
+        /*var timer = Qt.createQmlObject('import QtQuick 2.0; Timer{ interval: ' + timeout + '; running: true; repeat: false}', Qt.application);
         timer.onTriggered.connect(function(){
-            if(http.readyState !== http.DONE) {
-                connObj.raiseRetry();
+            if(request.readyState !== request.DONE) {
+                //connObj.raiseRetry();
                 timer.destroy();
             }
-        });
+        });*/
 
-        connObj.onAbort.connect(function(){
-            http.abort();
-        });
+        /*connObj.onAbort.connect(function(){
+            request.abort();
+        });*/
 
-        http.open(method, url, true);
-        http.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-        http.setRequestHeader("User-Agent", userAgent);
-        http.setRequestHeader("Connection", "close");
-        //if(this.modhash !== "") http.setRequestHeader("X-Modhash", this.modhash);
+        request.open(method, url, true);
+        request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+        request.setRequestHeader("User-Agent", userAgent);
+        request.setRequestHeader("Connection", "close");
+        if(this.modhash !== "") request.setRequestHeader("X-Modhash", this.modhash);
 
-        http.onreadystatechange = function() {
-            if (http.readyState == http.DONE) {
-                if(timer.stop) {
+        request.onreadystatechange = function() {
+            if (request.readyState == request.DONE) {
+                /*if(timer.stop) {
                     timer.stop();
                     timer.destroy();
-                }
-                if (http.status == 200) {
-                    var response = JSON.parse(http.responseText);
-                    connObj.connectionSuccess(response);
+                }*/
+                if (request.status == 200) {
+                    var response = JSON.parse(request.responseText);
+                    //connObj.connectionSuccess(response);
                 } else {
-                    connObj.error("Could not connect to Reddit.");
+                    //connObj.error("Could not connect to Reddit.");
                 }
             }
         }
 
-        http.send();
+        request.send();
         return connObj;
     }
 
