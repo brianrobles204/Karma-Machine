@@ -14,7 +14,7 @@ Item {
     Rectangle{
         anchors.fill: parent
         z: -1
-        color: internalModel ? internalModel.data.stickied ? "#feffae" : "#fafafa" : "#fafafa"
+        color: internalModel ? internalModel.data.stickied ? "#feffae" : "#f2f2f2" : "#f2f2f2"
     }
 
     UbuntuShape {

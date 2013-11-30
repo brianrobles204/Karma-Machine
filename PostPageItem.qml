@@ -228,12 +228,18 @@ Item {
         }
 
         onUrlChanged: {
-            console.log(url)
+            //console.log(url)
             postHeader.y = 0
 
-            var urlStr = url.toString()
-            var matchedUrl = urlStr.match(/^([\w]+:\/\/)([\w.-]+)[\/]?/)
-            var domain = matchedUrl[2]
+            try {
+                var urlStr = url.toString()
+                var matchedUrl = urlStr.match(/^([\w]+:\/\/)([\w.-]+)[\/]?/)
+                var domain = matchedUrl[2]
+            } catch (error) {
+                //The link does not seem to match an arbitrary url format
+                webSection.title = "Link"
+                return
+            }
 
             var splitDomain = domain.split('.')
             var baseDomain = (splitDomain[0].indexOf('www') !== -1) ? domain.slice(splitDomain[0].length + 1) : domain

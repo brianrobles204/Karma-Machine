@@ -93,7 +93,7 @@ SwipeBox{
             }
 
             property variant post: swipeBox.internalModel
-            text: post ? MiscUtils.getHtmlText(post.data.selftext, "#fafafa") : ""
+            text: post ? MiscUtils.getHtmlText(post.data.selftext, "#f2f2f2") : ""
             textFormat: Text.RichText
             fontSize: "small"
             wrapMode: Text.Wrap
@@ -104,7 +104,7 @@ SwipeBox{
         Rectangle {
             id: descContentBG
             anchors.fill: parent
-            color: "#fafafa"
+            color: "#f2f2f2"
             z: -1
         }
     }

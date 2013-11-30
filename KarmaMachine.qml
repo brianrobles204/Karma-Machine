@@ -19,7 +19,7 @@ MainView {
     //width: units.gu(120)
     height: units.gu(71)
 
-    backgroundColor: "#dadada"
+    backgroundColor: "#d9d9d9"
 
     Layouts { id: dummyLayout; anchors.fill: parent;}
     property bool isPhone: dummyLayout.width <= units.gu(85)

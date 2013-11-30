@@ -3,7 +3,6 @@ import QtGraphicalEffects 1.0
 import Ubuntu.Components 0.1
 import Ubuntu.Components.ListItems 0.1 as ListItems
 import Ubuntu.Components.Popups 0.1
-import "CustomListItems" as CustomListItems
 import "Utils/Misc.js" as MiscUtils
 import "JSONListModel" as JSON
 
@@ -526,12 +525,19 @@ Item {
                     }
                     Label {
                         id: userName
-                        text: redditNotifier.activeUser //storageHandler.tmpUsername
+
+                        property string anonString: "[anon]"
+                        property string loadingString: "…"
+
+                        readonly property bool isAnon: redditNotifier.activeUser === ""
+                        readonly property bool isLoading: redditNotifier.authStatus === "loading"
+
+                        text: !isLoading ? !isAnon ? redditNotifier.activeUser : anonString : loadingString
+                        fontSize: "small"
                         anchors {
                             top: userImg.bottom
                             horizontalCenter: parent.horizontalCenter
                         }
-                        fontSize: "small"
                     }
 
                     MouseArea {
@@ -542,71 +548,160 @@ Item {
                         id: userPopupComponent
                         Popover {
                             id: userPopover
-                            ListView {
+                            callerMargin: units.gu(1)
+                            Flickable {
+                                id: userFlickable
                                 anchors { top: parent.top; left: parent.left; right: parent.right }
-                                height: childrenRect.height
-                                header: Column {
-                                    anchors { left: parent.left; right: parent.right}
-                                    height: childrenRect.height
-                                    CustomListItems.Header {
-                                        text: 'User ' + redditNotifier.activeUser
-                                    }
-                                    ListItems.Standard {
-                                        text: 'Profile'
-                                        visible: redditNotifier.isLoggedIn
-                                        onClicked: {
-                                            console.log("profile")
-                                        }
-                                    }
-                                    ListItems.Standard {
-                                        text: 'Messages'
-                                        visible: redditNotifier.isLoggedIn
-                                        onClicked: {
-                                            console.log("messages")
-                                        }
-                                    }
-                                    ListItems.Standard {
-                                        text: 'Saved'
-                                        visible: redditNotifier.isLoggedIn
-                                        onClicked: {
-                                            console.log("saved")
-                                        }
-                                    }
-                                    CustomListItems.Header {
-                                        text: 'Other Users'
-                                    }
-                                    ListItems.ThinDivider{}
-                                }
+                                height: Math.min(userColumn.height,  frontPageItem.height - (headerAddition.y + headerAddition.height + units.gu(5)))
+                                clip: true
+                                contentHeight: userColumn.height
+                                UserColumn {
+                                    id: userColumn
+                                    users: redditObj.getUsers()
+                                    selectedIndex: users.indexOf(redditNotifier.activeUser)
+                                    loading: redditNotifier.authStatus === 'loading'
 
-                                /*ListItems.Standard {
-                                    text: 'Login'
-                                    visible: !redditNotifier.isLoggedIn
-                                    onClicked: {
+                                    onUserDelete: {
+                                        PopupUtils.open(userDeleteComponent, false, {user: users[deletedIndex]})
                                         PopupUtils.close(userPopover)
-                                        PopupUtils.open(userDialogComponent)
                                     }
-                                }
-                                ListItems.Standard {
-                                    text: 'Logout'
-                                    visible: redditNotifier.isLoggedIn
-                                    onClicked: {
-                                        PopupUtils.close(userPopover)
-                                        var logoutConnObj = redditObj.logout()
-                                        logoutConnObj.onSuccess.connect(function(){
-                                            postList.loadSubreddit()
+
+                                    onUserSwitch: {
+                                        var postListing = postList //calling postList directly doesn't seem to work
+                                        postListing.clearListing()
+
+                                        var switchConnObj = redditObj.switchActiveUser(users[selectedIndex] || "")
+                                        switchConnObj.onSuccess.connect(function(){
+                                            postListing.loadSubreddit()
                                         })
+
+                                        PopupUtils.close(userPopover)
                                     }
-                                }*/
 
-                                model: ListModel {
-                                    ListElement {name: "test"}
-                                }
-
-                                delegate: ListItems.Standard {
-                                    text: name
+                                    onUserAdd: {
+                                        PopupUtils.open(userAddComponent)
+                                        PopupUtils.close(userPopover)
+                                    }
                                 }
                             }
                         }
+                    }
+
+                    Component {
+                        id: userDeleteComponent
+                        Dialog {
+                            id: userDeleteDialog
+
+                            property string user
+
+                            title: "Remove User"
+                            text: "Are you sure you want to remove user <b>" + user + "</b>?"
+
+                            Item {
+                                anchors { left: parent.left; right: parent.right }
+                                height: childrenRect.height
+
+                                Button {
+                                    text: "Cancel"
+                                    gradient: UbuntuColors.greyGradient
+                                    onClicked: PopupUtils.close(userDeleteDialog)
+                                    anchors.left: parent.left
+                                }
+                                Button {
+                                    text: "Remove"
+                                    gradient: UbuntuColors.orangeGradient
+                                    anchors.right: parent.right
+                                    onClicked: {
+                                        var postListing = postList
+
+                                        var isActiveUser = redditObj.deleteUser(userDeleteDialog.user)
+                                        if (isActiveUser) {
+                                            postListing.clearListing()
+                                            var logoutConnObj = redditObj.logout()
+                                            logoutConnObj.onSuccess.connect(function(){
+                                                postListing.loadSubreddit()
+                                            })
+                                        }
+
+                                        PopupUtils.close(userDeleteDialog)
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    Component {
+                         id: userAddComponent
+                         Dialog {
+                             id: userAddDialog
+
+                             property string defaultText: "The Frontpage of the Internet"
+
+                             function startLogin() {
+                                 if (usernameTextField.text == "" || passwordTextField.text == "") return true;
+                                 usernameTextField.focus = false
+                                 passwordTextField.focus = false
+
+                                 var loginConnObj = redditObj.loginNewUser(usernameTextField.text, passwordTextField.text)
+                                 loginConnObj.onSuccess.connect(function(){
+                                     postList.loadSubreddit()
+                                     PopupUtils.close(userAddDialog)
+                                 })
+                                 loginConnObj.onError.connect(function(errorMessage){
+                                     passwordTextField.text = ""
+                                     userAddDialog.text = "<font color='red'>" + errorMessage + "</font>"
+                                 })
+                             }
+
+                             title: "Log in to Reddit"
+                             text: "The Frontpage of the Internet"
+
+                             Component.onCompleted: usernameTextField.forceActiveFocus()
+
+                             TextField {
+                                 id: usernameTextField
+                                 placeholderText: 'Username'
+                                 hasClearButton: true
+                                 onAccepted: passwordTextField.forceActiveFocus()
+                                 onTextChanged: userAddDialog.text = userAddDialog.defaultText
+                             }
+                             TextField {
+                                 id: passwordTextField
+                                 placeholderText: 'Password'
+                                 hasClearButton: true
+                                 echoMode: TextInput.Password
+                                 onAccepted: userAddDialog.startLogin()
+                                 onTextChanged: userAddDialog.text = userAddDialog.defaultText
+                             }
+
+                             Item {
+                                 anchors { left: parent.left; right: parent.right }
+                                 height: childrenRect.height
+                                 Button {
+                                     text: "Cancel"
+                                     gradient: UbuntuColors.greyGradient
+                                     onClicked: PopupUtils.close(userAddDialog)
+                                     anchors.left: parent.left
+                                 }
+                                 ActivityIndicator {
+                                     id: loginIndicator
+                                     anchors{
+                                         right: loginButton.left
+                                         rightMargin: units.gu(1)
+                                         verticalCenter: loginButton.verticalCenter
+                                     }
+                                     running: redditNotifier.authStatus === "loading"
+                                 }
+
+                                 Button {
+                                     id: loginButton
+                                     text: "Login"
+                                     gradient: UbuntuColors.orangeGradient
+                                     onClicked: userAddDialog.startLogin()
+                                     anchors.right: parent.right
+                                 }
+                             }
+                         }
                     }
                 }
             }
@@ -628,119 +723,6 @@ Item {
                 }
             }
         }
-    }
-
-    Component {
-         id: userDialogComponent
-         Dialog {
-             id: userDialog
-             title: "Login to Reddit"
-             text: "The Frontpage of the Internet"
-
-             Component.onCompleted: usernameTextField.forceActiveFocus()
-
-             function startLogin() {
-                 if (usernameTextField.text == "" || passwordTextField.text == "") return true;
-                 usernameTextField.focus = false
-                 passwordTextField.focus = false
-                 loginIndicator.visible = true
-                 /*storageHandler.setProp('autologin', rememberCheckBox.checked)
-                 var loginResponse = actionHandler.login(usernameTextField.text, passwordTextField.text)*/
-                 var loginConnObj = redditObj.loginNewUser(usernameTextField.text, passwordTextField.text)
-                 loginConnObj.onSuccess.connect(function(){
-                     postList.loadSubreddit()
-                     PopupUtils.close(userDialog)
-                 })
-                 loginConnObj.onError.connect(function(errorMessage){
-                     usernameTextField.text = ""
-                     passwordTextField.text = ""
-                     userDialog.text = errorMessage
-                 })
-             }
-
-             TextField {
-                 id: usernameTextField
-                 placeholderText: 'Username'
-                 hasClearButton: true
-                 onAccepted: userDialog.startLogin()
-             }
-             TextField {
-                 id: passwordTextField
-                 placeholderText: 'Password'
-                 hasClearButton: true
-                 echoMode: TextInput.Password
-                 onAccepted: userDialog.startLogin()
-             }
-             /*MouseArea {
-                 anchors{
-                     left: parent.left
-                     leftMargin: units.gu(2)
-                 }
-                 width: childrenRect.width
-                 height: childrenRect.height
-                 onClicked: rememberCheckBox.checked = !rememberCheckBox.checked
-
-                 CheckBox {
-                     id: rememberCheckBox
-                     checked: true
-                     anchors.left: parent.left
-                 }
-                 Label {
-                     text: "Remember me?"
-                     anchors{
-                         left: rememberCheckBox.right
-                         leftMargin: units.gu(2)
-                         verticalCenter: rememberCheckBox.verticalCenter
-                     }
-                 }
-             }*/
-
-             //Item{ width: parent.width; height: units.gu(1)} //simple hack for extra spacing
-             Item {
-                 width: parent.width
-                 height: childrenRect.height
-                 Button {
-                     text: "Cancel"
-                     gradient: UbuntuColors.greyGradient
-                     onClicked: PopupUtils.close(userDialog)
-                     anchors.left: parent.left
-                 }
-                 ActivityIndicator {
-                     id: loginIndicator
-                     anchors{
-                         right: loginButton.left
-                         rightMargin: units.gu(1)
-                         verticalCenter: loginButton.verticalCenter
-                     }
-                     running: true
-                     visible: false
-                 }
-
-                 Button {
-                     id: loginButton
-                     text: "Login"
-                     gradient: UbuntuColors.orangeGradient
-                     onClicked: userDialog.startLogin()
-                     anchors.right: parent.right
-
-                     /*Connections {
-                         target: actionHandler
-                         onFinishedLoading: {
-                             loginIndicator.visible = false
-                             if (actionHandler.loginError == "") {
-                                 postList.loadSubreddit()
-                                 PopupUtils.close(userDialog)
-                             } else {
-                                 actionHandler.logout()
-                                 usernameTextField.text = ""
-                                 passwordTextField.text = ""
-                                 userDialog.text = actionHandler.loginError
-                             }
-                         }
-                     }*/
-                 }
-             }
-         }
     }
 
     DropShadow {

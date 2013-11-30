@@ -103,7 +103,7 @@ SwipeBox{
             right: parent.right
         }
         height: parent.height
-        color: "#fafafa"
+        color: "#f2f2f2"
         z: -2
     }
 }

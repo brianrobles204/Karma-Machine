@@ -99,27 +99,31 @@ function createObject(ObjectStr) {
     return component.createObject(Qt.application);
 }
 
+function createTimer(timeout) {
+    return Qt.createQmlObject('import QtQuick 2.0; Timer{ interval: ' + timeout + '; running: true; repeat: false}', Qt.application);
+}
+
 
 var BaseReddit = function(userAgent) {
     this.modhash = "";
 
     this._getConnection = function(method, url, actionObj) {
         var request = new XMLHttpRequest();
-        //var connObj = createObject("ConnectionObject.qml");
-        //var timeout = 30000;
+        var connObj = createObject("ConnectionObject.qml");
+        var timeout = 30000;
         console.log(url);
 
-        /*var timer = Qt.createQmlObject('import QtQuick 2.0; Timer{ interval: ' + timeout + '; running: true; repeat: false}', Qt.application);
+        var timer = createTimer(timeout);
         timer.onTriggered.connect(function(){
             if(request.readyState !== request.DONE) {
-                //connObj.raiseRetry();
+                connObj.raiseRetry();
                 timer.destroy();
             }
-        });*/
+        });
 
-        /*connObj.onAbort.connect(function(){
+        connObj.onAbort.connect(function(){
             request.abort();
-        });*/
+        });
 
         request.open(method, url, true);
         request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
@@ -129,15 +133,15 @@ var BaseReddit = function(userAgent) {
 
         request.onreadystatechange = function() {
             if (request.readyState == request.DONE) {
-                /*if(timer.stop) {
+                if(timer.stop) {
                     timer.stop();
                     timer.destroy();
-                }*/
+                }
                 if (request.status == 200) {
                     var response = JSON.parse(request.responseText);
-                    //connObj.connectionSuccess(response);
+                    connObj.connectionSuccess(response);
                 } else {
-                    //connObj.error("Could not connect to Reddit.");
+                    connObj.error("Could not connect to Reddit.");
                 }
             }
         }

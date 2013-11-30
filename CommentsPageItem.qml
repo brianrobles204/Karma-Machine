@@ -191,7 +191,7 @@ Item {
 
                 commentItem.anchors.leftMargin = units.gu(1) * level
                 var isLevelEven = ((level % 2) === 0)
-                if (isLevelEven) commentItem.bgRect.color = "#efefef"
+                if (isLevelEven) commentItem.bgRect.color = "#eaeaea"
 
                 var addToHeight = commentItem.height + units.gu(0.6)
                 if(cModel.data.replies.data !== undefined) {
