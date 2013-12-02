@@ -19,26 +19,26 @@ SwipeBox{
     }
 
     onSwipedRight: {
-        if(storageHandler.modhash !== "") {
-            if(vote == "up") {
-                vote = ""
-                actionHandler.unvote(internalModel.data.name)
-            } else {
-                vote = "up"
-                actionHandler.upvote(internalModel.data.name)
-            }
-        }
+//        if(storageHandler.modhash !== "") {
+//            if(vote == "up") {
+//                vote = ""
+//                actionHandler.unvote(internalModel.data.name)
+//            } else {
+//                vote = "up"
+//                actionHandler.upvote(internalModel.data.name)
+//            }
+//        }
     }
     onSwipedLeft: {
-        if(storageHandler.modhash !== "") {
-            if(vote == "down") {
-                vote = ""
-                actionHandler.unvote(internalModel.data.name)
-            } else {
-                vote = "down"
-                actionHandler.downvote(internalModel.data.name)
-            }
-        }
+//        if(storageHandler.modhash !== "") {
+//            if(vote == "down") {
+//                vote = ""
+//                actionHandler.unvote(internalModel.data.name)
+//            } else {
+//                vote = "down"
+//                actionHandler.downvote(internalModel.data.name)
+//            }
+//        }
     }
 
     Rectangle {

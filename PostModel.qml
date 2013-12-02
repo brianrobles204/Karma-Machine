@@ -169,7 +169,7 @@ ListModel {
         if ( json === "" )
             return;
 
-        if(storageHandler.firstTutorial) {
+        if(settingsHandler.firstTime) {
             var tutorialPost = getTutorialPost()
             append(tutorialPost)
             appendCalled();

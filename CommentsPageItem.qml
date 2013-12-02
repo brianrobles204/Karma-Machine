@@ -80,7 +80,7 @@ Item {
             }
             Label {
                 id: sortingLabel
-                text: dict[storageHandler.commentsSort]
+                text: dict[settingsHandler.commentsSort]
                 fontSize: "small"
                 font.weight: Font.DemiBold
                 anchors.right: openIcon.left
@@ -126,7 +126,7 @@ Item {
                         text: name
                         onClicked: {
                             PopupUtils.close(sortingPopover)
-                            storageHandler.setProp('commentsSort', sort)
+                            settingsHandler.commentsSort = sort
                             sortingLabel.text = name
                         }
                     }
@@ -153,7 +153,7 @@ Item {
         }
 
         Connections {
-            target: storageHandler
+            target: settingsHandler
             onCommentsSortChanged: {
                 commentsList.loadComments()
             }
@@ -172,7 +172,7 @@ Item {
             loading = true
             if (internalModel == undefined) return
 
-            var commentsConnObj = internalModel.getCommentsListing(storageHandler.commentsSort)
+            var commentsConnObj = internalModel.getCommentsListing(settingsHandler.commentsSort)
             commentsConnObj.onSuccess.connect(function(){
                 loading = false
                 for (var i = 0; i < commentsConnObj.response.length; i++) {

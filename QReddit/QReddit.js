@@ -103,7 +103,7 @@ var QReddit = function(userAgent, applicationName) {
             var loginConnObj;
             root.notifier.authStatus = 'loading';
 
-            if (username !== root.getActiveUser() && root.getActiveUser() !== "") {
+            if (username !== root.notifier.currentAuthUser && root.notifier.currentAuthUser !== "") {
                 //A different user is already logged in. We must log out first.
 
                 //Since we're calling getAPIConnection() inside a function, we can't return the Connection object it gives.
@@ -144,6 +144,7 @@ var QReddit = function(userAgent, applicationName) {
                 root.modhash = loginConnObj.response.modhash;
                 console.log("Log: Logged in \"" + username + "\" successfully.");
                 root.notifier.authStatus = 'done';
+                root.notifier.currentAuthUser = username;
             });
             loginConnObj.onError.connect(function (response) {
                 root.notifier.authStatus = 'error';
@@ -299,6 +300,7 @@ var QReddit = function(userAgent, applicationName) {
         });
         logoutConnObj.onSuccess.connect(function(){
             if(!loadingAuth) root.notifier.authStatus = 'none';
+            root.notifier.currentAuthUser = "";
             root._setActiveUser("");
         });
 
@@ -314,18 +316,8 @@ var QReddit = function(userAgent, applicationName) {
     }
 
 
-    this.getSubreddit = function(srName) {
+    this.getSubredditObj = function(srName) {
         //Returns a Subreddit Object. If srName is omitted, the Subreddit Object will correspond to the Reddit Frontpage.
         return srName ? new SubredditObj(this, srName) : new SubredditObj(this);
     }
-}
-
-function debugTest() {
-    var Reddit = new QReddit("Karma Machine Reddit App 0.78", "karma-machine");
-    Reddit._setActiveUser('xineoph');
-    var connObj = Reddit.loginActiveUser();
-    connObj.onSuccess.connect(function(){
-        var subr = Reddit.getSubreddit();
-        subr.getPostsListing(PostsSort.Hot);
-    });
 }

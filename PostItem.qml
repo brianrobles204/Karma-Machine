@@ -39,7 +39,7 @@ SwipeBox{
 
     function checkTutorial() {
         if(internalModel.data.id == "tutorialID") {
-            storageHandler.setProp('firstTutorial', false)
+            settingsHandler.firstTime = false
         }
     }
 

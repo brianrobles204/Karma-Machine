@@ -17,7 +17,7 @@ SwipeBox{
     height: commentInfoLabel.height + commentBody.height + units.gu(2.5)
 
     onSwipedRight: {
-        if(storageHandler.modhash !== "") {
+        /*if(storageHandler.modhash !== "") {
             if(vote == "up") {
                 vote = ""
                 actionHandler.unvote(internalModel.data.name)
@@ -25,10 +25,10 @@ SwipeBox{
                 vote = "up"
                 actionHandler.upvote(internalModel.data.name)
             }
-        }
+        }*/
     }
     onSwipedLeft: {
-        if(storageHandler.modhash !== "") {
+        /*if(storageHandler.modhash !== "") {
             if(vote == "down") {
                 vote = ""
                 actionHandler.unvote(internalModel.data.name)
@@ -36,7 +36,7 @@ SwipeBox{
                 vote = "down"
                 actionHandler.downvote(internalModel.data.name)
             }
-        }
+        }*/
     }
 
     Rectangle {

@@ -241,7 +241,6 @@ var SubredditObj = function (reddit, srName) {
 
         connSubrObj.onConnectionSuccess.connect(function(response){
             root.data = response.data;
-            //TODO transform response.data.children array to array of Post Objects with proper command extensions;
             var postObjArray = getPostObjArray(response.data.children)
             root.data.children = postObjArray;
             connSubrObj.response = postObjArray;
@@ -266,9 +265,10 @@ var SubredditObj = function (reddit, srName) {
         var root = this;
 
         connMoreObj.onConnectionSuccess.connect(function(response){
-            root.data.children.push(response.data.children);
+            var postObjArray = getPostObjArray(response.data.children)
+            root.data.children.push(postObjArray);
             root.data.after = response.data.after;
-            connMoreObj.response = response.data.children;
+            connMoreObj.response = postObjArray;
             connMoreObj.success();
         });
 

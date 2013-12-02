@@ -63,7 +63,7 @@ Item {
                 if (subredditObj && subreddit === srName) {
                     metaSubredditObj = subredditObj
                 } else {
-                    metaSubredditObj = subredditObj = redditObj.getSubreddit(srName || "")
+                    metaSubredditObj = subredditObj = redditObj.getSubredditObj(srName || "")
                 }
 
                 paramObj = paramObj || {}
@@ -112,18 +112,6 @@ Item {
             anchors.left: parent.left
             anchors.right: parent.right
 
-            /*Connections {
-                target: redditNotifier
-                onAuthStatusChanged: {
-                    var authStatus = redditNotifier.authStatus
-                    if (authStatus === 'none' || authStatus === 'done') {
-                        postList.loadSubreddit()
-                    } else if (authStatus === 'loading' || authStatus === 'clear') {
-                        postList.clearListing()
-                    }
-                }
-            }*/
-
             Item {
                 id: headerAdditionRect
                 property bool isOpen
@@ -148,8 +136,6 @@ Item {
         property bool enableBehavior
         property variant targetPostItem: null
         property real prevContentY: 0
-
-        //Component.onCompleted: isOpen = true
 
         Connections {
             target: postFlickable

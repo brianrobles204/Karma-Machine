@@ -296,7 +296,7 @@ MainView {
                             action: Action {
                                 text: "Comment"
                                 iconSource: "media/Comments.png"
-                                enabled: storageHandler.modhash != ""
+                                enabled: redditNotifier.isLoggedIn
                                 onTriggered: PopupUtils.open(commentComposerSheetComponent) //actionHandler.comment("test", postPageItem.internalModel.data.name)
                             }
                         }
@@ -304,7 +304,7 @@ MainView {
                             action: Action {
                                 text: "Upvote"
                                 iconSource: postPageItem.vote == "up" ? "media/toolbar/up-vote.png" : "media/toolbar/up-empty.png"
-                                enabled: storageHandler.modhash != ""
+                                enabled: redditNotifier.isLoggedIn
                                 onTriggered: {
                                     if(postPageItem.vote == "up") {
                                         postPageItem.vote = ""
@@ -320,7 +320,7 @@ MainView {
                             action: Action {
                                 text: "Downvote"
                                 iconSource: postPageItem.vote == "down" ? "media/toolbar/down-vote.png" : "media/toolbar/down-empty.png"
-                                enabled: storageHandler.modhash != ""
+                                enabled: redditNotifier.isLoggedIn
                                 onTriggered: {
                                     if(postPageItem.vote == "down") {
                                         postPageItem.vote = ""
@@ -560,106 +560,92 @@ MainView {
         }
     }
 
+    /*
+      To extend, simply add the new setting as a string to settingsArray, as well
+      as add a new property of of the same name to settingsHandler. Refer to below.
+      settingsHandler will take care of the rest for you.
+
+      To use, you can read by using settingsHandler.SETTING,
+      and write using settingsHandler.SETTING = VALUE.
+      Everything is automatically binded.
+    */
     QtObject {
-        id: storageHandler
-        property variant keyArray: ['defaultSubList', 'commentsSort', 'modhash', 'username', 'passwd', 'autologin', 'firstTutorial']
-        property string defaultSubList: "Adviceanimals,Askreddit,Aww,Bestof,Books,Earthporn,Explainlikeimfive,Funny,Gaming,Gifs,Iama,Movies,Music,News,Pics,Science,Technology,Television,Todayilearned,Videos,Worldnews,Wtf"
+        id: settingsHandler
+
+        property var settingsArray: [
+            'commentsSort',
+            'firstTime',
+        ]
         property string commentsSort: "confidence"
-        property string modhash: ""
-        property string username: ''
-        property string passwd: ''
-        property bool autologin: false
-        property bool firstTutorial: true
+        property bool firstTime: true
 
-        //temporary values, to be erased on next startup
-        property string tmpUsername: 'user'
-        property bool tmpIsInitialized: false
-
-        readonly property string roDefaultsSubList: "Adviceanimals,Askreddit,Aww,Bestof,Books,Earthporn,Explainlikeimfive,Funny,Gaming,Gifs,Iama,Movies,Music,News,Pics,Science,Technology,Television,Todayilearned,Videos,Worldnews,Wtf"
-
-        function setProp(name, value) {
-            setSetting(name, value)
-            storageHandler[name] = getSetting(name)
+        function _getDatabase() {
+            return LocalStorage.openDatabaseSync("karma-machine", "1.0", "User Storage Database", 1000000);
         }
 
-        function getDatabase() {
-             return LocalStorage.openDatabaseSync("karma-machine", "1.0", "StorageDatabase", 1000000);
+        function _getDatabaseTransaction(statement, values) {
+            var database = _getDatabase();
+            var response;
+            database.transaction(function(transaction) {
+                response = values ? transaction.executeSql(statement, values) : transaction.executeSql(statement);
+            });
+            return response;
         }
 
-        function initialize() {
-            var db = getDatabase();
-            db.transaction(
-                function(tx) {
-                    tx.executeSql('CREATE TABLE IF NOT EXISTS settings(setting TEXT UNIQUE, value TEXT)');
-              });
-            if (getSetting("initialized") !== "true") {
-                // initialize settings
-                console.debug("reset settings")
-                setSetting("initialized", "true")
-                setSetting("defaultSubList", roDefaultsSubList)
-                setSetting("commentsSort", "confidence")
-                setSetting("modhash", "")
-                setSetting("username", '')
-                setSetting("passwd", '')
-                setSetting("autologin", false)
-                setSetting("firstTutorial", true)
+        function _setValue(setting, value) {
+            var dbTransaction = _getDatabaseTransaction('INSERT OR REPLACE INTO settings VALUES (?,?);', [setting, value]);
+            if (dbTransaction.rowsAffected <= 0) {
+                throw "Error: setSetting(): Transaction failed.";
+            }
+        }
+
+        function _getValue(setting) {
+            var dbTransaction = _getDatabaseTransaction('SELECT value FROM settings WHERE setting=?;', [setting]);
+            if(dbTransaction.rows.length > 0) {
+                return dbTransaction.rows.item(0).value;
             } else {
-                //load settings
-                for (var i = 0; i < keyArray.length; i++) {
-                    var setting = getSetting(keyArray[i])
-                    if (setting === '1') {
-                        setting = true
-                    } else if (setting === '0') {
-                        setting = false
+                throw "setting \"" + setting + "\" not in database"
+            }
+        }
+
+        function _initialize() {
+            _getDatabaseTransaction('CREATE TABLE IF NOT EXISTS settings(setting TEXT UNIQUE, value TEXT)')
+
+            for (var i = 0; i < settingsArray.length; i++) {
+                var setting = settingsArray[i]
+
+                try {
+                    var value = _getValue(setting)
+
+                    //Correcting because LocalStorage doesn't store bools properly
+                    if (value === '1') {
+                        value = true
+                    } else if (value === '0') {
+                        value = false
                     }
 
-                    if(setting !== "Unknown") storageHandler[keyArray[i]] = setting
+                    settingsHandler[setting] = value
+                } catch (error) {
+                    _setValue(setting, settingsHandler[setting])
+
                 }
+
+                var signalChangeStr = 'on' + setting.charAt(0).toUpperCase() + setting.slice(1) + 'Changed'
+                settingsHandler[signalChangeStr].connect((function (key) {
+                    //Fancy closures to handle scoping problems. See http://www.mennovanslooten.nl/blog/post/62
+                    return function () {
+                        var setting = settingsArray[key]
+                        var newValue = settingsHandler[setting]
+                        _setValue(setting, newValue)
+                    }
+                })(i))
             }
-            tmpIsInitialized = true
         }
 
-        function setSetting(setting, value) {
-            var db = getDatabase();
-            var res = "";
-            db.transaction(function(tx) {
-                var rs = tx.executeSql('INSERT OR REPLACE INTO settings VALUES (?,?);', [setting,value]);
-                      //-console.log(rs.rowsAffected)
-                      if (rs.rowsAffected > 0) {
-                        res = "OK";
-                      } else {
-                        res = "Error";
-                      }
-                }
-          );
-          return res;
-        }
-
-        function getSetting(setting) {
-           var db = getDatabase();
-           var res="";
-
-           try {
-               db.transaction(function(tx) {
-                 var rs = tx.executeSql('SELECT value FROM settings WHERE setting=?;', [setting]);
-                 if (rs.rows.length > 0) {
-                      res = rs.rows.item(0).value;
-                 } else {
-                     res = "Unknown";
-                 }
-              })
-           } catch(e) {
-               return "";
-           }
-
-          return res
-        }
-
+        Component.onCompleted: _initialize()
     }
 
     Component.onCompleted: {
-        storageHandler.initialize()
-        //if(storageHandler.autologin) actionHandler.login(storageHandler.username, storageHandler.passwd)
         var loginConnObj = redditObj.loginActiveUser()
         loginConnObj.onSuccess.connect(function(){
             frontPageItem.reloadFrontPage()
