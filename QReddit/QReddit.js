@@ -28,8 +28,9 @@ var QReddit = function(userAgent, applicationName) {
         }
 
         root._addUser = function(username, passwd) {
-            var dbTransaction = getDatabaseTransaction('INSERT OR REPLACE INTO RedditUsers VALUES (?,?);',
-                                                       [username, passwd]);
+            var subscribed = "";
+            var dbTransaction = getDatabaseTransaction('INSERT OR REPLACE INTO RedditUsers VALUES (?,?,?);',
+                                                       [username, passwd, subscribed]);
             if (dbTransaction.rowsAffected > 0) {
                 console.log("Log: Added user \"" + username + "\"");
             } else {
@@ -155,7 +156,7 @@ var QReddit = function(userAgent, applicationName) {
 
         root._isUserStored = function(username) {
             var storedUsers = root.getUsers();
-            return (storedUsers.indexOf(username) !== -1);
+            return (storedUsers.indexOf(username) !== -1 || username === "");
         }
 
         root._setActiveUser = function(username) {
@@ -179,7 +180,8 @@ var QReddit = function(userAgent, applicationName) {
             try {
                 var dbTransaction = getDatabaseTransaction('SELECT username FROM RedditUsers;');
                 for (var i = 0; i < dbTransaction.rows.length; i++) {
-                    users.push(dbTransaction.rows.item(i).username);
+                    var username = dbTransaction.rows.item(i).username
+                    if (username !== "") users.push(username);
                 }
             } catch (error) {
                 console.error("Error: getUsers(): \"" + error + "\" Returning empty array.")
@@ -191,12 +193,114 @@ var QReddit = function(userAgent, applicationName) {
             return activeUser || "";
         }
 
+
+        root.updateSubscribedArray = function() {
+            //Returns a Connection QML object. Updates the activeUser's subscribed subreddits from the internet.
+            var username = root.getActiveUser();
+            var isAUser = username !== "";
+            var subsrConnObj;
+
+            function parseListing(listing) {
+                var subsrArray = [];
+                for (var i = 0; i < listing.length; i++) {
+                    var subsrName = listing[i].data.display_name;
+                    subsrName = subsrName.charAt(0).toUpperCase() + subsrName.slice(1)//.toLowerCase();
+                    subsrArray.push(subsrName);
+                }
+                return subsrArray;
+            }
+
+            function updateMoreSubscribed(after) {
+                var subsrConnObj = root.getAPIConnection("subreddits_mine subscriber", {
+                                                             after: after,
+                                                             limit: 100
+                                                         });
+                subsrConnObj.onConnectionSuccess.connect(function(response){
+                    var subsrArray = parseListing(response.data.children);
+                    if(typeof response.data.after === "string") {
+                        var updConnObj = updateMoreSubscribed(response.data.after);
+                        updConnObj.onSuccess.connect(function(){
+                            subsrArray = subsrArray.concat(updConnObj.response);
+                            subsrConnObj.response = subsrArray;
+                            subsrConnObj.success();
+                        });
+                    } else {
+                        subsrConnObj.response = subsrArray;
+                        subsrConnObj.success();
+                    }
+                });
+                return subsrConnObj;
+            }
+
+            if (isAUser) {
+                subsrConnObj = root.getAPIConnection("subreddits_mine subscriber", {limit: 100});
+            } else {
+                subsrConnObj = root.getAPIConnection("subreddits_default");
+            }
+
+            subsrConnObj.onConnectionSuccess.connect(function(response){
+                var subsrArray = parseListing(response.data.children);
+
+                if(typeof response.data.after === "string" && isAUser) {
+                    var updConnObj = updateMoreSubscribed(response.data.after);
+                    updConnObj.onSuccess.connect(function(){
+                        subsrArray = subsrArray.concat(updConnObj.response);
+                        subsrArray = subsrArray.sort();
+                        subsrConnObj.response = subsrArray.join();
+                        subsrConnObj.success();
+                    });
+                } else {
+                    subsrArray = subsrArray.sort();
+                    subsrConnObj.response = subsrArray.join();
+                    subsrConnObj.success();
+                }
+            });
+            subsrConnObj.onSuccess.connect(function(){
+                var dbTransaction = getDatabaseTransaction('UPDATE RedditUsers SET subscribed=? WHERE username=?;',
+                                                           [subsrConnObj.response, username]);
+                if (dbTransaction.rowsAffected > 0){
+                    console.log("Log: Set updated subreddit list for \"" + username + "\"");
+                } else {
+                    throw "Error: _setActiveUser(): Transaction failed.";
+                }
+            });
+
+            return subsrConnObj;
+        }
+
+        root.getSubscribedArray = function(username) {
+            //Returns a stored user's subscribed subreddits.
+            //If username is not passed, the activeUser's subreddits will be returned.
+            var subscribed;
+            username = username || root.getActiveUser();
+
+            //Check if username is stored in database
+            if(!root._isUserStored(username)) {
+                username = root.getActiveUser();
+            }
+
+            try {
+                var dbTransaction = getDatabaseTransaction('SELECT subscribed FROM RedditUsers WHERE username=?;', [username]);
+                if(dbTransaction.rows.length > 0) {
+                    subscribed = dbTransaction.rows.item(0).subscribed;
+                } else {
+                    throw "Transaction failed.";
+                }
+            } catch (error) {
+                subscribed = "";
+            }
+
+            return subscribed.split(',');
+        }
+
+
         var initializeDatabase = (function() {
             try {
                 //Create tables RedditUsers and ActiveRedditUser.
-                getDatabaseTransaction('CREATE TABLE IF NOT EXISTS RedditUsers(username TEXT UNIQUE, passwd TEXT);');
+                getDatabaseTransaction('CREATE TABLE IF NOT EXISTS RedditUsers(username TEXT UNIQUE, passwd TEXT, subscribed TEXT);');
                 getDatabaseTransaction('CREATE TABLE IF NOT EXISTS ActiveRedditUser(username TEXT UNIQUE);');
-                getDatabaseTransaction('INSERT INTO ActiveRedditUser SELECT "" WHERE NOT EXISTS (SELECT * FROM ActiveRedditUser LIMIT 1)')
+                getDatabaseTransaction('INSERT INTO ActiveRedditUser SELECT "" WHERE NOT EXISTS (SELECT * FROM ActiveRedditUser LIMIT 1)');
+                getDatabaseTransaction('INSERT INTO RedditUsers(username, passwd, subscribed) SELECT "", "", "" WHERE NOT EXISTS (SELECT * FROM RedditUsers LIMIT 1)');
                 //Set the active user
                 activeUser = root._getActiveUserFromDB();
                 root.notifier.activeUser = activeUser;
@@ -319,5 +423,10 @@ var QReddit = function(userAgent, applicationName) {
     this.getSubredditObj = function(srName) {
         //Returns a Subreddit Object. If srName is omitted, the Subreddit Object will correspond to the Reddit Frontpage.
         return srName ? new SubredditObj(this, srName) : new SubredditObj(this);
+    }
+
+    this.getUserObj = function(username) {
+        //Returns a User Object.
+        return new UserObj(this, username || "");
     }
 }

@@ -3,8 +3,9 @@ import QtGraphicalEffects 1.0
 import Ubuntu.Components 0.1
 import Ubuntu.Components.ListItems 0.1 as ListItems
 import Ubuntu.Components.Popups 0.1
-import "Utils/Misc.js" as MiscUtils
 import "JSONListModel" as JSON
+import "Utils/Misc.js" as MiscUtils
+import "QReddit/QRHelper.js" as QRHelper
 
 Item {
     id: frontPageItem
@@ -16,8 +17,8 @@ Item {
         headerAddition.isOpen = !headerAddition.isOpen
     }
 
-    function reloadFrontPage() {
-        postList.loadSubreddit()
+    function reloadPage() {
+        postList.loadSubreddit(postList.subreddit, true)
     }
 
     Flickable {
@@ -40,8 +41,12 @@ Item {
         Column {
             id: postList
 
-            property var subredditObj
             readonly property string subreddit: subredditObj ? subredditObj.srName : ""
+            readonly property bool containsPosts: children.length > 1
+            property string _sort: "hot"
+            property string _time: ""
+
+            property var subredditObj
             property bool loading
 
             function _appendPosts(postsArray) {
@@ -56,6 +61,8 @@ Item {
             }
 
             function _loadSubredditListing(srName, sort, paramObj) {
+                _sort = sort
+                _time = paramObj.t || ""
                 clearListing()
                 loading = true
 
@@ -74,20 +81,25 @@ Item {
                 })
             }
 
-            function loadSubreddit(srName) {
-                _loadSubredditListing(srName)
+            function loadSubreddit(srName, force) {
+                srName = srName || ""
+                if(srName === subreddit && containsPosts && !force) return true
+                var paramObj = {}
+                if (_time !== "") paramObj.t = _time
+                _loadSubredditListing(srName, _sort, paramObj)
             }
 
-            function loadParamObj(sort, paramObj) {
+            function loadParamObj(sort, paramObj, force) {
+                if(sort === _sort && (paramObj.t || "" === _time) && !force) return true
                 _loadSubredditListing(subreddit, sort, paramObj)
             }
 
             function clearListing() {
                 headerAddition.isOpen = false
 
-                if(postList.children.length > 0) {
-                    for (var i = 0; i < postList.children.length; i++) {
-                        if(postList.children[i] !== headerAdditionRect) postList.children[i].destroy()
+                if(containsPosts) {
+                    for (var i = 0; i < children.length; i++) {
+                        if(children[i] !== headerAdditionRect) children[i].destroy()
                     }
                 }
                 moreLoaderItem.spaceRect = null
@@ -285,70 +297,80 @@ Item {
                     id: subredditPopupComponent
                     Popover {
                         id: subredditPopover
-                        onVisibleChanged: subredditOpenIcon.isOpen = visible
                         autoClose: true
-                        Column {
-                            id: subredditListColumn
-                            anchors {
-                                top: parent.top
-                                left: parent.left
-                                right: parent.right
-                            }
+                        onVisibleChanged: subredditOpenIcon.isOpen = visible
+                        //In the future, this ListView will have to be replaced with a Column and Repeaters/ListView
+                        //To allow for MultiReddits or Favorites, etc
+                        ListView {
+                            id: subredditListView
+                            clip: true
+                            width: parent.width
                             height: frontPageItem.height - (headerAddition.y + headerAddition.height + units.gu(5))
-                            ListView {
-                                id: subredditListView
-                                clip: true
-                                width: parent.width
-                                height: parent.height
-                                JSON.JSONListModel {
-                                    id: subredditList
-                                    source: ((storageHandler.modhash != "") && (storageHandler.defaultSubList == storageHandler.roDefaultsSubList)) ? "http://www.reddit.com/subreddits/mine/subscriber.json?limit=100&uh=" + storageHandler.modhash : ""
-                                    query: "$.data.children[*]"
 
-                                    onUpdated: {
-                                        var subListArray = []
-                                        for (var i = 1; i < model.count; i++) {
-                                            var name = model.get(i).data.display_name
-                                            var lowerCaseName = name.toLowerCase()
-                                            var firstToUpName = lowerCaseName.substr(0, 1).toUpperCase() + lowerCaseName.substr(1)
-                                            subListArray.push(firstToUpName)
-                                        }
-                                        var subList = subListArray.join()
-                                        storageHandler.setProp('defaultSubList', subList)
-                                    }
-                                }
+                            Component.onCompleted: {
+                                var index = redditObj.getSubscribedArray().indexOf(postList.subreddit)
+                                positionViewAtIndex(index, ListView.Beginning)
+                            }
 
-                                model: ListModel { id: subredditListModel }
-
-                                Connections {
-                                    target: storageHandler
-                                    onDefaultSubListChanged: subredditListView.populateModel()
-                                }
-                                Component.onCompleted: populateModel()
-
-                                function populateModel() {
-                                    subredditListModel.clear()
-                                    var listArray = storageHandler.defaultSubList.split(',').sort()
-                                    listArray.unshift("<b>Frontpage</b>","<b>All</b>","<b>Custom...</b>")
-                                    for (var i = 0; i < listArray.length; i++) {
-                                        subredditListModel.append({"name": listArray[i]})
-                                    }
-                                }
-
-                                delegate: ListItems.Standard {
-                                    text: model.name
-                                    onClicked: {
-                                        PopupUtils.close(subredditPopover)
-                                        if(model.name === "<b>Frontpage</b>"){
-                                            postList.loadSubreddit()
-                                        } else if (model.name === "<b>All</b>") {
-                                            postList.loadSubreddit('All')
-                                        }  else if (model.name === "<b>Custom...</b>") {
-                                            PopupUtils.open(customSubRDialogComponent)
-                                        } else {
-                                            postList.loadSubreddit(model.name)
+                            header: Column {
+                                anchors { left: parent.left; right: parent.right }
+                                height: childrenRect.height;
+                                z: 100
+                                Row {
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    height: units.gu(8); width: childrenRect.width
+                                    spacing: units.gu(1)
+                                    ToolbarButton {
+                                        iconSource: "media/noSignal.png"
+                                        text: postList.subreddit !== "" ? "Frontpage" : "<b>Frontpage</b>"
+                                        MouseArea {
+                                            anchors.fill: parent
+                                            onClicked: {
+                                                PopupUtils.close(subredditPopover)
+                                                postList.loadSubreddit()
+                                            }
                                         }
                                     }
+                                    ToolbarButton {
+                                        iconSource: "media/user.png"
+                                        text: postList.subreddit !== "All" ? "All" : "<b>All</b>"
+                                        MouseArea {
+                                            anchors.fill: parent
+                                            onClicked: {
+                                                PopupUtils.close(subredditPopover)
+                                                postList.loadSubreddit("All")
+                                            }
+                                        }
+                                    }
+                                    ToolbarButton {
+                                        property bool custom: redditObj.getSubscribedArray().indexOf(postList.subreddit) !== -1 || postList.subreddit === ""
+
+                                        iconSource: "media/CommentsDark.png"
+                                        text: custom ? "Custom…" : "<b>Custom…</b>"
+
+                                        MouseArea {
+                                            anchors.fill: parent
+                                            onClicked: {
+                                                PopupUtils.close(subredditPopover)
+                                                PopupUtils.open(customSubRDialogComponent)
+                                            }
+                                        }
+                                    }
+                                    /*ToolbarButton {
+                                        iconSource: "media/user.png" //icon could be binoculars
+                                        text: "Explore"
+                                    }*/
+                                }
+                                ListItems.ThinDivider {}
+                            }
+
+                            model: QRHelper.arrayToListModel(redditObj.getSubscribedArray())
+
+                            delegate: ListItems.Standard {
+                                text: model.name !== postList.subreddit ? model.name : "<b>" + model.name + "</b>"
+                                onClicked: {
+                                    PopupUtils.close(subredditPopover)
+                                    postList.loadSubreddit(model.name)
                                 }
                             }
                         }
@@ -463,7 +485,7 @@ Item {
                                 }
 
                                 delegate: ListItems.Standard {
-                                    text: name
+                                    text: name !== sortingSwitcher.text ? name : "<b>" + name +"</b>"
                                     onClicked: {
                                         PopupUtils.close(sortingPopover)
                                         sortingSwitcher.text = name
@@ -553,6 +575,11 @@ Item {
                                     }
 
                                     onUserSwitch: {
+                                        if(redditNotifier.activeUser === users[selectedIndex]) {
+                                            //The selected user already is the active user.
+                                            PopupUtils.close(userPopover)
+                                            return true
+                                        }
                                         var postListing = postList //calling postList directly doesn't seem to work
                                         postListing.clearListing()
 
@@ -630,6 +657,7 @@ Item {
 
                                  var loginConnObj = redditObj.loginNewUser(usernameTextField.text, passwordTextField.text)
                                  loginConnObj.onSuccess.connect(function(){
+                                     redditObj.updateSubscribedArray()
                                      postList.loadSubreddit()
                                      PopupUtils.close(userAddDialog)
                                  })

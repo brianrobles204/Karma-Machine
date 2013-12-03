@@ -49,24 +49,6 @@ MainView {
             title: isPhone ? frontPageItem.title : " "
             flickable: isPhone ? frontPageItem.flickable : dummyFlickable
 
-            /*Rectangle{
-                id: debugtangle
-                width: units.gu(30)
-                height: units.gu(20)
-                anchors.centerIn: parent
-                color: "#fafafa"
-                z: 10000000000
-                Label {
-                    property string testText: "&gt;te&lt;s&gt;lol&lt;/s&gt;t\n
-&gt;&gt;test &gt;this&gt; is a &gt;&gt;test"
-                    text: MiscUtils.getHtmlText(testText, "#fafafa")
-                    anchors.fill: parent
-                    anchors.margins: units.gu(1)
-                    wrapMode: Text.WordWrap
-                    textFormat: Text.RichText
-                }
-            }*/
-
             onStateChanged: {
                 if(state == "tabletState") {
                     if(pageStack.currentPage == postPage ) {
@@ -226,7 +208,7 @@ MainView {
                                 text: "Refresh"
                                 iconSource: "media/toolbar/reload.svg"
                                 onTriggered: {
-                                    frontPageItem.reloadFrontPage()
+                                    frontPageItem.reloadPage()
                                     frontPageToolbarItems.opened = false
                                 }
                             }
@@ -561,8 +543,8 @@ MainView {
     }
 
     /*
-      To extend, simply add the new setting as a string to settingsArray, as well
-      as add a new property of of the same name to settingsHandler. Refer to below.
+      To extend, simply add your new setting as a string to settingsArray, then
+      add a new property of of the same name to settingsHandler. Refer to below.
       settingsHandler will take care of the rest for you.
 
       To use, you can read by using settingsHandler.SETTING,
@@ -648,7 +630,7 @@ MainView {
     Component.onCompleted: {
         var loginConnObj = redditObj.loginActiveUser()
         loginConnObj.onSuccess.connect(function(){
-            frontPageItem.reloadFrontPage()
+            frontPageItem.reloadPage()
         })
 
 

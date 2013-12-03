@@ -43,6 +43,8 @@ var API = {
     'subreddits_popular': '/subreddits/popular',
     'subreddits_new': '/subreddits/new',
     'subreddits_banned': '/subreddits/banned',
+    'subreddits_mine': '/subreddits/mine/%s',
+    'subreddits_default': '/reddits',
 
     //*Users
     'friend': '/api/friend',
@@ -55,7 +57,8 @@ var API = {
 var SSLPaths = ['login'];
 var GETPaths = ['comments', 'hot', 'new', 'rising', 'random', 'top', 'controversial', 'message', 'search',
                 'subreddit_recommendations', 'subreddits_by_topic', 'subreddit_about', 'subreddits_search',
-                'subreddits_new', 'subreddits_popular', 'subreddits_banned', 'user_about', 'user_where']
+                'subreddits_new', 'subreddits_popular', 'subreddits_banned', 'subreddits_mine', 'subreddits_default',
+                'user_about', 'user_where']
 var DefaultURL = 'www.reddit.com';
 var SecureURL = 'ssl.reddit.com';
 
@@ -294,5 +297,11 @@ var PostObj = function(reddit, post) {
         });
 
         return connCommentsObj;
+    }
+}
+
+var UserObj = function(reddit, username) {
+    this.getActivityListing = function(where) {
+        where = where || "overview";
     }
 }
