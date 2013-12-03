@@ -36,6 +36,16 @@ MainView {
         postPageItem.toggle()
     }
 
+    //Opens content inside the postPageItem.
+    //content may be a url string, or a postObj.
+    //forceComments is a bool for loading the comments without the link. To be used only if content is a postObj.
+    function openPostContent(content, forceComments) {
+        postPageItem.openPostContent(content, forceComments)
+        if (isPhone) {
+            pageStack.push(postPage)
+        }
+    }
+
     PageStack {
         id: pageStack
         anchors.fill: parent
@@ -58,7 +68,7 @@ MainView {
                     //TODO: be smarter
                     //if the current post is not visible on the frontPage, go back to the frontPage
                     //if we go from phoneLayout(frontPage) to tabletLayout to back to phoneLayout, make sure it's on frontPage
-                    if(postPageItem.internalModel) {
+                    if(postPageItem.postObj) {
                         pageStack.push(postPage)
                     }
                 }
@@ -138,7 +148,6 @@ MainView {
 
             PostPageItem {
                 id: postPageItem
-                //internalModel: linkHandler.internalModel
                 z: 100
             }
             Image {
@@ -248,7 +257,7 @@ MainView {
 
                     onCancelClicked: PopupUtils.close(commentComposerSheet)
                     onConfirmClicked: {
-                        actionHandler.comment(commentTextArea.text, postPageItem.internalModel.data.name)
+                        actionHandler.comment(commentTextArea.text, postPageItem.postObj.data.name)
                         PopupUtils.close(commentComposerSheet)
                     }
                 }
@@ -266,7 +275,7 @@ MainView {
 
                     Row {
                         id: postPageToolbarButtons
-                        visible: postPageItem.internalModel != null
+                        visible: postPageItem.postObj != null
                         anchors {
                             top: parent.top
                             bottom: parent.bottom
@@ -279,7 +288,7 @@ MainView {
                                 text: "Comment"
                                 iconSource: "media/Comments.png"
                                 enabled: redditNotifier.isLoggedIn
-                                onTriggered: PopupUtils.open(commentComposerSheetComponent) //actionHandler.comment("test", postPageItem.internalModel.data.name)
+                                onTriggered: PopupUtils.open(commentComposerSheetComponent) //actionHandler.comment("test", postPageItem.postObj.data.name)
                             }
                         }
                         ToolbarButton {
@@ -290,10 +299,10 @@ MainView {
                                 onTriggered: {
                                     if(postPageItem.vote == "up") {
                                         postPageItem.vote = ""
-                                        actionHandler.unvote(postPageItem.internalModel.data.name)
+                                        actionHandler.unvote(postPageItem.postObj.data.name)
                                     } else {
                                         postPageItem.vote = "up"
-                                        actionHandler.upvote(postPageItem.internalModel.data.name)
+                                        actionHandler.upvote(postPageItem.postObj.data.name)
                                     }
                                 }
                             }
@@ -306,10 +315,10 @@ MainView {
                                 onTriggered: {
                                     if(postPageItem.vote == "down") {
                                         postPageItem.vote = ""
-                                        actionHandler.unvote(postPageItem.internalModel.data.name)
+                                        actionHandler.unvote(postPageItem.postObj.data.name)
                                     } else {
                                         postPageItem.vote = "down"
-                                        actionHandler.downvote(postPageItem.internalModel.data.name)
+                                        actionHandler.downvote(postPageItem.postObj.data.name)
                                     }
                                 }
                             }
@@ -368,32 +377,6 @@ MainView {
 
     QtObject {
         id: actionHandler
-    }
-
-    QtObject {
-        id: linkHandler
-
-        function openLink(link) {
-            postPageItem.openLink(link)
-        }
-
-        function openNewLink(internalModel) {
-            if(internalModel.data.is_self) {
-                if(internalModel != postPageItem.internalModel) postPageItem.openComments(internalModel)
-            } else {
-                postPageItem.openNewLink(internalModel)
-            }
-            if (isPhone) {
-                pageStack.push(postPage)
-            }
-        }
-
-        function openCommentsIM(internalModel) {
-            postPageItem.openComments(internalModel)
-            if (isPhone) {
-                pageStack.push(postPage)
-            }
-        }
     }
 
     /*

@@ -4,9 +4,9 @@ import "Utils/Misc.js" as MiscUtils
 
 SwipeBox{
     id: swipeBox
-    property var internalModel
+    property var commentObj
     property Rectangle bgRect: bgRect
-    property string vote: internalModel.data.likes === true ? "up" : internalModel.data.likes === false ? "down" : ""
+    property string vote: commentObj.data.likes === true ? "up" : commentObj.data.likes === false ? "down" : ""
 
     anchors {
         left: parent.left
@@ -20,10 +20,10 @@ SwipeBox{
         /*if(storageHandler.modhash !== "") {
             if(vote == "up") {
                 vote = ""
-                actionHandler.unvote(internalModel.data.name)
+                actionHandler.unvote(commentObj.data.name)
             } else {
                 vote = "up"
-                actionHandler.upvote(internalModel.data.name)
+                actionHandler.upvote(commentObj.data.name)
             }
         }*/
     }
@@ -31,10 +31,10 @@ SwipeBox{
         /*if(storageHandler.modhash !== "") {
             if(vote == "down") {
                 vote = ""
-                actionHandler.unvote(internalModel.data.name)
+                actionHandler.unvote(commentObj.data.name)
             } else {
                 vote = "down"
-                actionHandler.downvote(internalModel.data.name)
+                actionHandler.downvote(commentObj.data.name)
             }
         }*/
     }
@@ -59,9 +59,9 @@ SwipeBox{
     Label {
         id: commentInfoLabel
         text: {
-            var author = internalModel ? internalModel.data.author : "[:(]"
-            var score = internalModel ? (internalModel.data.ups - internalModel.data.downs) : 0
-            var timeRaw = internalModel ? internalModel.data.created_utc : new Date()
+            var author = commentObj ? commentObj.data.author : "[:(]"
+            var score = commentObj ? (commentObj.data.ups - commentObj.data.downs) : 0
+            var timeRaw = commentObj ? commentObj.data.created_utc : new Date()
             var time = MiscUtils.timeSince(new Date(timeRaw * 1000))
             return "<b>" + author + "</b> <b>·</b> " + score + " points <b>·</b> " + time
         }
@@ -79,7 +79,7 @@ SwipeBox{
 
     Label {
         id: commentBody
-        text: internalModel ? MiscUtils.getHtmlText(internalModel.data.body, bgRect.color) : ""
+        text: commentObj ? MiscUtils.getHtmlText(commentObj.data.body, bgRect.color) : ""
         textFormat: Text.RichText
         anchors {
             top: commentInfoLabel.bottom
@@ -92,7 +92,7 @@ SwipeBox{
         wrapMode: Text.Wrap
         fontSize: "small"
         color: UbuntuColors.coolGrey
-        onLinkActivated: linkHandler.openLink(link)
+        onLinkActivated: openPostContent(link)
     }
 
     Rectangle {

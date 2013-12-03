@@ -3,24 +3,22 @@ import Ubuntu.Components 0.1
 
 SwipeBox{
     id: swipeBox
-    property var internalModel
+    property var postObj
     height: headerAdditionHolder.height + postBox.height + divider.height
     width: parent.width
-    property string vote: internalModel.data.likes === true ? "up" : internalModel.data.likes === false ? "down" : ""
+    property string vote: postObj.data.likes === true ? "up" : postObj.data.likes === false ? "down" : ""
 
-    onClicked: {
-        linkHandler.openNewLink(internalModel)
-    }
+    onClicked: openPostContent(postObj)
 
     onSwipedRight: {
         checkTutorial()
         if(storageHandler.modhash !== "") {
             if(vote == "up") {
                 vote = ""
-                actionHandler.unvote(internalModel.data.name)
+                actionHandler.unvote(postObj.data.name)
             } else {
                 vote = "up"
-                actionHandler.upvote(internalModel.data.name)
+                actionHandler.upvote(postObj.data.name)
             }
         }
     }
@@ -29,16 +27,16 @@ SwipeBox{
         if(storageHandler.modhash !== "") {
             if(vote == "down") {
                 vote = ""
-                actionHandler.unvote(internalModel.data.name)
+                actionHandler.unvote(postObj.data.name)
             } else {
                 vote = "down"
-                actionHandler.downvote(internalModel.data.name)
+                actionHandler.downvote(postObj.data.name)
             }
         }
     }
 
     function checkTutorial() {
-        if(internalModel.data.id == "tutorialID") {
+        if(postObj.data.id == "tutorialID") {
             settingsHandler.firstTime = false
         }
     }

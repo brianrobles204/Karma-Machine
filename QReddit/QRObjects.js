@@ -110,6 +110,10 @@ function createTimer(timeout) {
 var BaseReddit = function(userAgent) {
     this.modhash = "";
 
+    this.toString = function() {
+        return "[object BaseRedditObject]"
+    }
+
     this._getConnection = function(method, url, actionObj) {
         var request = new XMLHttpRequest();
         var connObj = createObject("ConnectionObject.qml");
@@ -226,6 +230,10 @@ var SubredditObj = function (reddit, srName) {
         return postObjArray;
     }
 
+    this.toString = function() {
+        return "[object SubredditObject]"
+    }
+
     this._setCurrentProperties = function(apiCommand, paramObj) {
         this.currentCommand  = apiCommand;
         this.currentParamObj = paramObj;
@@ -285,6 +293,10 @@ var PostObj = function(reddit, post) {
         this[key] = post[key];
     }
 
+    this.toString = function() {
+        return "[object PostObject]"
+    }
+
     this.getCommentsListing = function(sort, paramObj) {
         paramObj = paramObj || {};
         paramObj.sort = sort;
@@ -301,6 +313,11 @@ var PostObj = function(reddit, post) {
 }
 
 var UserObj = function(reddit, username) {
+
+    this.toString = function() {
+        return "[object UserObject]"
+    }
+
     this.getActivityListing = function(where) {
         where = where || "overview";
     }

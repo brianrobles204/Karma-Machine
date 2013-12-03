@@ -14,7 +14,7 @@ Item {
     Rectangle{
         anchors.fill: parent
         z: -1
-        color: internalModel ? internalModel.data.stickied ? "#feffae" : "#f2f2f2" : "#f2f2f2"
+        color: postObj ? postObj.data.stickied ? "#feffae" : "#f2f2f2" : "#f2f2f2"
     }
 
     UbuntuShape {
@@ -30,7 +30,7 @@ Item {
         height: units.gu(6)
         image: Image {
             source: {
-                var image = internalModel ? internalModel.data.thumbnail: "media/self.png"
+                var image = postObj ? postObj.data.thumbnail: "media/self.png"
                 if(image == "self") return "media/self.png"
                 if(image == "default") return "media/default.png"
                 if(image == "nsfw") return "media/nsfw.png"
@@ -38,7 +38,7 @@ Item {
             }
             fillMode: Image.PreserveAspectCrop
         }
-        visible: internalModel ? (internalModel.data.thumbnail !== "self" && internalModel.data.thumbnail !== "default" && internalModel.data.thumbnail !== "") : false
+        visible: postObj ? (postObj.data.thumbnail !== "self" && postObj.data.thumbnail !== "default" && postObj.data.thumbnail !== "") : false
     }
 
     Column {
@@ -56,7 +56,7 @@ Item {
 
         Label {
             id: postTitle
-            text: internalModel ? MiscUtils.simpleFixHtmlChars(internalModel.data.title) : ""
+            text: postObj ? MiscUtils.simpleFixHtmlChars(postObj.data.title) : ""
             width: parent.width
             wrapMode: Text.Wrap
             horizontalAlignment: Text.AlignLeft
@@ -71,7 +71,7 @@ Item {
 
             Label {
                 id: postScore
-                text: internalModel ? " " + internalModel.data.score : ":)"
+                text: postObj ? " " + postObj.data.score : ":)"
                 color: "#999999"
                 horizontalAlignment: Text.AlignLeft
                 fontSize: "large"
@@ -81,12 +81,12 @@ Item {
             Label {
                 id: postMiniInfo
                 text: {
-                    var author = internalModel ? internalModel.data.author : "author"
-                    var subreddit = internalModel ? internalModel.data.subreddit : "reddit"
+                    var author = postObj ? postObj.data.author : "author"
+                    var subreddit = postObj ? postObj.data.subreddit : "reddit"
 
-                    var timeRaw = internalModel ? internalModel.data.created_utc : 0
+                    var timeRaw = postObj ? postObj.data.created_utc : 0
                     var time = MiscUtils.timeSince(new Date(timeRaw * 1000))
-                    var domain = internalModel ? internalModel.data.domain : "reddit.com"
+                    var domain = postObj ? postObj.data.domain : "reddit.com"
 
                     return "<b>" + author + "</b> in <b>r/" + subreddit + "</b><br/>" + time + " <b>·</b> " + domain
                 }
@@ -108,11 +108,11 @@ Item {
             rightMargin: postRow.spacingConstant
         }
 
-        onClicked: linkHandler.openCommentsIM(internalModel)
+        onClicked: openPostContent(postObj, true)
         z: -1
 
         Label {
-            text: internalModel ? MiscUtils.commentsSimple(internalModel.data.num_comments) : "0"
+            text: postObj ? MiscUtils.commentsSimple(postObj.data.num_comments) : "0"
             color: "white"
             anchors {
                 verticalCenter: parent.verticalCenter

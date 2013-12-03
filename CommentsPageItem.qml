@@ -4,7 +4,7 @@ import Ubuntu.Components.ListItems 0.1 as ListItems
 import Ubuntu.Components.Popups 0.1
 
 Item {
-    property var internalModel
+    property var postObj
 
     function reload() {
         commentsList.loadComments()
@@ -15,7 +15,7 @@ Item {
 
     DescItem {
         id: descItem
-        internalModel: parent.internalModel
+        postObj: parent.postObj
     }
 
     Item{
@@ -51,7 +51,7 @@ Item {
             }
             fontSize: "small"
             font.weight: Font.DemiBold
-            text: internalModel ? internalModel.data.num_comments : ""
+            text: postObj ? postObj.data.num_comments : ""
         }
 
         AbstractButton{
@@ -137,7 +137,7 @@ Item {
 
     Column {
         id: commentsList
-        property var internalModel: parent.internalModel
+        property var postObj: parent.postObj
         property bool loading: true
         anchors {
             top: spaceAndCommentInfo.bottom
@@ -148,7 +148,7 @@ Item {
             rightMargin: units.gu(1.5)
         }
 
-        onInternalModelChanged: {
+        onPostObjChanged: {
             loadComments()
         }
 
@@ -170,9 +170,9 @@ Item {
         function loadComments() {
             clearComments()
             loading = true
-            if (internalModel == undefined) return
+            if (postObj == undefined) return
 
-            var commentsConnObj = internalModel.getCommentsListing(settingsHandler.commentsSort)
+            var commentsConnObj = postObj.getCommentsListing(settingsHandler.commentsSort)
             commentsConnObj.onSuccess.connect(function(){
                 loading = false
                 for (var i = 0; i < commentsConnObj.response.length; i++) {
@@ -184,7 +184,7 @@ Item {
         function createComment(cModel, level) {
             if(cModel.kind == "t1"){
                 var component = Qt.createComponent("CommentsItem.qml")
-                var commentItem = component.createObject(commentsList, {"internalModel": cModel})
+                var commentItem = component.createObject(commentsList, {"commentObj": cModel})
                 if(commentItem == null) {
                     console.log("Error creating object")
                 }

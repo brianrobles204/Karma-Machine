@@ -7,37 +7,57 @@ import "Utils/Misc.js" as MiscUtils
 Item {
     id: postPageItem
 
-    property var internalModel: null
+    property var postObj: null
     property Flickable flickable
     property WebView __webSection: webSection
     property string webUrl: webSection.url
-    property string commentsUrl: internalModel ? "http://reddit.com" + internalModel.data.permalink : "http://reddit.com"
+    property string commentsUrl: postObj ? "http://reddit.com" + postObj.data.permalink : "http://reddit.com"
     property string title: postHeader.title == "" ? " " : postHeader.title
-    property string subTitle: internalModel ? MiscUtils.simpleFixHtmlChars(internalModel.data.title) : ""
+    property string subTitle: postObj ? MiscUtils.simpleFixHtmlChars(postObj.data.title) : ""
     property bool linkOpen: commentsSection.state == "linkOpen"
-    property bool canBeToggled: webSection.canBeOpened && internalModel != null
+    property bool canBeToggled: webSection.canBeOpened && postObj != null
     property string vote: ""
 
-    onInternalModelChanged: {
-        vote = internalModel.data.likes === true ? "up" : internalModel.data.likes === false ? "down" : ""
+    onPostObjChanged: {
+        vote = postObj.data.likes === true ? "up" : postObj.data.likes === false ? "down" : ""
     }
 
-    function openLink(link) {
+    function openPostContent(content, forceComments) {
+        if (typeof content === "string") {
+            //content is a url.
+            commentsSection.peek()
+            webSection.open(content)
+        } else if (content.toString() === "[object PostObject]") {
+            //content is a postObj
+            if(content.data.is_self || forceComments) {
+                commentsSection.show()
+                if(content === postObj) return
+                postObj = content
+                webSection.open("about:blank")
+            } else {
+                postObj = content
+                webSection.clearOpen(postObj.data.url)
+                webSection.openPeekBG()
+            }
+        }
+    }
+
+    /*function openLink(link) {
         commentsSection.peek()
         webSection.open(link)
     }
 
-    function openNewLink(newInternalModel) {
-        internalModel = newInternalModel
-        webSection.clearOpen(internalModel.data.url)
+    function openNewLink(newPostObj) {
+        postObj = newPostObj
+        webSection.clearOpen(postObj.data.url)
         webSection.openPeekBG()
     }
 
-    function openComments(newInternalModel) {
-        internalModel = newInternalModel
+    function openComments(newPostObj) {
+        postObj = newPostObj
         webSection.open("about:blank")
         commentsSection.show()
-    }
+    }*/
 
     function toggle() {
         var cstate = commentsSection.state
@@ -144,7 +164,7 @@ Item {
         anchors.fill: parent
         z: 110
         color: "#dadada"
-        visible: !postPageItem.internalModel
+        visible: !postPageItem.postObj
 
         Item {
             property real margin: units.gu(6)
@@ -303,12 +323,12 @@ Item {
 
         CommentsPageItem {
             id: commentsPageItem
-            internalModel: postPageItem.internalModel
+            postObj: postPageItem.postObj
         }
 
         Connections {
             target: postPageItem
-            onInternalModelChanged: {
+            onPostObjChanged: {
                 commentsSection.contentY = 0
             }
         }
@@ -494,7 +514,7 @@ Item {
                 horizontalAlignment: Text.AlignHCenter
                 clip: true
                 height: implicitHeight < maxHeight ? implicitHeight : maxHeight //parent.height - units.gu(3.6)
-                text: postPageItem.internalModel ? MiscUtils.simpleFixHtmlChars(postPageItem.internalModel.data.title) : ""
+                text: postPageItem.postObj ? MiscUtils.simpleFixHtmlChars(postPageItem.postObj.data.title) : ""
                 font.weight: Font.DemiBold
                 color: UbuntuColors.coolGrey
             }
@@ -553,7 +573,7 @@ Item {
 
                 Label {
                     id: commentsPeekNum
-                    text: postPageItem.internalModel ? postPageItem.internalModel.data.num_comments : ""
+                    text: postPageItem.postObj ? postPageItem.postObj.data.num_comments : ""
                     anchors{
                         left: commentsPeekIcon.right
                         leftMargin: units.gu(0.6)
@@ -569,7 +589,7 @@ Item {
 
             Label {
                 id: commentsPeekScore
-                text: postPageItem.internalModel ? postPageItem.internalModel.data.score + " pts <b>·</b> " : "0 pts <b>·</b> "
+                text: postPageItem.postObj ? postPageItem.postObj.data.score + " pts <b>·</b> " : "0 pts <b>·</b> "
                 anchors{
                     right: commentsPeekContainer.left
                     rightMargin: units.gu(0.5)
@@ -585,7 +605,7 @@ Item {
             Label {
                 id: commentsPeekTime
                 text: {
-                    var timeRaw = postPageItem.internalModel ? postPageItem.internalModel.data.created_utc : new Date()
+                    var timeRaw = postPageItem.postObj ? postPageItem.postObj.data.created_utc : new Date()
                     var time = MiscUtils.timeSince(new Date(timeRaw * 1000))
                     return " <b>·</b> " + time
                 }

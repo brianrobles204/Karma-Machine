@@ -4,28 +4,28 @@ import "Utils/Misc.js" as MiscUtils
 
 SwipeBox{
     id: swipeBox
-    property var internalModel
+    property var postObj
     height: descHeader.height + divider.height + descContent.height
     anchors {
         left: parent.left
         right: parent.right
     }
-    /*property string vote: internalModel.data.likes === true ? "up" : internalModel.data.likes === false ? "down" : ""
-    onInternalModelChanged: console.log("vote: " + vote)*/
+    /*property string vote: postObj.data.likes === true ? "up" : postObj.data.likes === false ? "down" : ""
+    onPostObjChanged: console.log("vote: " + vote)*/
     property string vote: ""
 
-    onInternalModelChanged: {
-        vote = internalModel.data.likes === true ? "up" : internalModel.data.likes === false ? "down" : ""
+    onPostObjChanged: {
+        vote = postObj.data.likes === true ? "up" : postObj.data.likes === false ? "down" : ""
     }
 
     onSwipedRight: {
 //        if(storageHandler.modhash !== "") {
 //            if(vote == "up") {
 //                vote = ""
-//                actionHandler.unvote(internalModel.data.name)
+//                actionHandler.unvote(postObj.data.name)
 //            } else {
 //                vote = "up"
-//                actionHandler.upvote(internalModel.data.name)
+//                actionHandler.upvote(postObj.data.name)
 //            }
 //        }
     }
@@ -33,10 +33,10 @@ SwipeBox{
 //        if(storageHandler.modhash !== "") {
 //            if(vote == "down") {
 //                vote = ""
-//                actionHandler.unvote(internalModel.data.name)
+//                actionHandler.unvote(postObj.data.name)
 //            } else {
 //                vote = "down"
-//                actionHandler.downvote(internalModel.data.name)
+//                actionHandler.downvote(postObj.data.name)
 //            }
 //        }
     }
@@ -82,7 +82,10 @@ SwipeBox{
         width: parent.width
         Label {
             id: descContentLabel
-            property variant hasContent: post ? post.data.is_self : false
+
+            readonly property variant hasContent: post ? post.data.selftext !== "" : false
+            property variant post: swipeBox.postObj
+
             anchors {
                 left: parent.left
                 right: parent.right
@@ -91,15 +94,13 @@ SwipeBox{
                 rightMargin: units.gu(1)
                 topMargin: units.gu(1)
             }
-
-            property variant post: swipeBox.internalModel
             text: post ? MiscUtils.getHtmlText(post.data.selftext, "#f2f2f2") : ""
             textFormat: Text.RichText
             fontSize: "small"
             wrapMode: Text.Wrap
             horizontalAlignment: Text.AlignLeft
             color: UbuntuColors.coolGrey
-            onLinkActivated: linkHandler.openLink(link)
+            onLinkActivated: openPostContent(link)
         }
         Rectangle {
             id: descContentBG

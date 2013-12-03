@@ -53,7 +53,7 @@ Item {
                 //Generate stuff here
                 for (var i = 0; i < postsArray.length; i++) {
                     var component = Qt.createComponent("PostItem.qml")
-                    var postItem = component.createObject(postList, {"internalModel": postsArray[i], "clip": true})
+                    var postItem = component.createObject(postList, {"postObj": postsArray[i], "clip": true})
                     if (postItem == null) {
                         console.log("Error creating object")
                     }

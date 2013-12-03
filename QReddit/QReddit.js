@@ -7,6 +7,10 @@ var QReddit = function(userAgent, applicationName) {
 
     this.notifier = createObject("NotifierObject.qml");
 
+    this.toString = function() {
+        return "[object RedditObject]"
+    }
+
 
     var _userHandler = (function(root) {
         //extends QReddit with user handling methods from within an anonymous function
