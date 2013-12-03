@@ -381,7 +381,7 @@ MainView {
 
     /*
       To extend, simply add your new setting as a string to settingsArray, then
-      add a new property of of the same name to settingsHandler. Refer to below.
+      add a new property of the same name to settingsHandler. Refer to below.
       settingsHandler will take care of the rest for you.
 
       To use, you can read by using settingsHandler.SETTING,
