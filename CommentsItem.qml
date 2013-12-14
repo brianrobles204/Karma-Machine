@@ -17,26 +17,22 @@ SwipeBox{
     height: commentInfoLabel.height + commentBody.height + units.gu(2.5)
 
     onSwipedRight: {
-        /*if(storageHandler.modhash !== "") {
-            if(vote == "up") {
-                vote = ""
-                actionHandler.unvote(commentObj.data.name)
-            } else {
-                vote = "up"
-                actionHandler.upvote(commentObj.data.name)
-            }
-        }*/
+        if(redditNotifier.isLoggedIn) {
+            var voteConnObj = commentObj.upvote()
+            voteConnObj.onSuccess.connect(function(){
+                //Update the comment object (as it does not emit a changed signal automatically)
+                commentObjChanged()
+            })
+        }
     }
     onSwipedLeft: {
-        /*if(storageHandler.modhash !== "") {
-            if(vote == "down") {
-                vote = ""
-                actionHandler.unvote(commentObj.data.name)
-            } else {
-                vote = "down"
-                actionHandler.downvote(commentObj.data.name)
-            }
-        }*/
+        if(redditNotifier.isLoggedIn) {
+            var voteConnObj = commentObj.downvote()
+            voteConnObj.onSuccess.connect(function(){
+                //Update the comment object (as it does not emit a changed signal automatically)
+                commentObjChanged()
+            })
+        }
     }
 
     Rectangle {

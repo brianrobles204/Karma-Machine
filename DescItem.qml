@@ -4,41 +4,33 @@ import "Utils/Misc.js" as MiscUtils
 
 SwipeBox{
     id: swipeBox
-    property var postObj
+
+    property var postObj: activePostObj//activePostItem.postObj
+    property string vote: postObj.data.likes === true ? "up" : postObj.data.likes === false ? "down" : ""
+
     height: descHeader.height + divider.height + descContent.height
     anchors {
         left: parent.left
         right: parent.right
     }
-    /*property string vote: postObj.data.likes === true ? "up" : postObj.data.likes === false ? "down" : ""
-    onPostObjChanged: console.log("vote: " + vote)*/
-    property string vote: ""
-
-    onPostObjChanged: {
-        vote = postObj.data.likes === true ? "up" : postObj.data.likes === false ? "down" : ""
-    }
 
     onSwipedRight: {
-//        if(storageHandler.modhash !== "") {
-//            if(vote == "up") {
-//                vote = ""
-//                actionHandler.unvote(postObj.data.name)
-//            } else {
-//                vote = "up"
-//                actionHandler.upvote(postObj.data.name)
-//            }
-//        }
+        if(redditNotifier.isLoggedIn) {
+            var voteConnObj = postObj.upvote()
+            voteConnObj.onSuccess.connect(function(){
+                //Update the comment object (as it does not emit a changed signal automatically)
+                activePostObjChanged()
+            })
+        }
     }
     onSwipedLeft: {
-//        if(storageHandler.modhash !== "") {
-//            if(vote == "down") {
-//                vote = ""
-//                actionHandler.unvote(postObj.data.name)
-//            } else {
-//                vote = "down"
-//                actionHandler.downvote(postObj.data.name)
-//            }
-//        }
+        if(redditNotifier.isLoggedIn) {
+            var voteConnObj = postObj.downvote()
+            voteConnObj.onSuccess.connect(function(){
+                //Update the comment object (as it does not emit a changed signal automatically)
+                activePostObjChanged()
+            })
+        }
     }
 
     Rectangle {

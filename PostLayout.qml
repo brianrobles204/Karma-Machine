@@ -4,12 +4,15 @@ import "Utils/Misc.js" as MiscUtils
 
 Item {
     id: postRow
+
+    property real spacingConstant: units.gu(1.25)
+    signal commentsTriggered
+
     height: Math.max(postColumn.height, postIcon.height) + units.gu(2.5)
     anchors{
         left: parent.left
         right: parent.right
     }
-    property real spacingConstant: units.gu(1.25)
 
     Rectangle{
         anchors.fill: parent
@@ -108,7 +111,7 @@ Item {
             rightMargin: postRow.spacingConstant
         }
 
-        onClicked: openPostContent(postObj, true)
+        onClicked: postRow.commentsTriggered()
         z: -1
 
         Label {

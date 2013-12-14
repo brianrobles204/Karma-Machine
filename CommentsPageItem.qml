@@ -2,12 +2,17 @@ import QtQuick 2.0
 import Ubuntu.Components 0.1
 import Ubuntu.Components.ListItems 0.1 as ListItems
 import Ubuntu.Components.Popups 0.1
+import "QReddit/QReddit.js" as QReddit
 
 Item {
-    property var postObj
+    property var postObj: activePostObj
 
     function reload() {
         commentsList.loadComments()
+    }
+
+    function insert(commentObj) {
+        //
     }
 
     height: childrenRect.height + units.gu(0.4)
@@ -15,7 +20,6 @@ Item {
 
     DescItem {
         id: descItem
-        postObj: parent.postObj
     }
 
     Item{
@@ -123,7 +127,7 @@ Item {
                     }
 
                     delegate: ListItems.Standard {
-                        text: name
+                        text: settingsHandler.commentsSort !== sort ? name : "<b>" + name + "</b>"
                         onClicked: {
                             PopupUtils.close(sortingPopover)
                             settingsHandler.commentsSort = sort
@@ -137,8 +141,9 @@ Item {
 
     Column {
         id: commentsList
-        property var postObj: parent.postObj
+        property var postObj: activePostObj
         property bool loading: true
+
         anchors {
             top: spaceAndCommentInfo.bottom
             topMargin: units.gu(0.5)
@@ -146,10 +151,6 @@ Item {
             right: parent.right
             leftMargin: units.gu(1.5)
             rightMargin: units.gu(1.5)
-        }
-
-        onPostObjChanged: {
-            loadComments()
         }
 
         Connections {
@@ -181,10 +182,10 @@ Item {
             });
         }
 
-        function createComment(cModel, level) {
-            if(cModel.kind == "t1"){
+        function createComment(commentObj, level) {
+            if(commentObj.kind == "t1"){
                 var component = Qt.createComponent("CommentsItem.qml")
-                var commentItem = component.createObject(commentsList, {"commentObj": cModel})
+                var commentItem = component.createObject(commentsList, {"commentObj": commentObj})
                 if(commentItem == null) {
                     console.log("Error creating object")
                 }
@@ -194,10 +195,10 @@ Item {
                 if (isLevelEven) commentItem.bgRect.color = "#eaeaea"
 
                 var addToHeight = commentItem.height + units.gu(0.6)
-                if(cModel.data.replies.data !== undefined) {
-                    var childComments = cModel.data.replies.data.children
+                if(commentObj.data.replies.data !== undefined) {
+                    var childComments = commentObj.data.replies.data.children
                     for (var i = 0; i < childComments.length; i++){
-                        addToHeight += createComment(childComments[i], level + 1)
+                        addToHeight += createComment(new QReddit.CommentObj(redditObj, childComments[i]), level + 1)
                     }
                 }
 

@@ -3,8 +3,9 @@ Qt.include('QRObjects.js');
 
 var QReddit = function(userAgent, applicationName) {
 
-    BaseReddit.apply(this, arguments);
-
+    //BaseReddit.apply(this, arguments);
+    this.userAgent = userAgent
+    this.applicationName = applicationName
     this.notifier = createObject("NotifierObject.qml");
 
     this.toString = function() {
@@ -12,14 +13,14 @@ var QReddit = function(userAgent, applicationName) {
     }
 
 
-    var _userHandler = (function(root) {
+    var _userHandler = (function(that) {
         //extends QReddit with user handling methods from within an anonymous function
 
         //avoid directly manipulating variable activeuser
         var activeUser = "";
 
         function getDatabase() {
-            return LocalStorage.LocalStorage.openDatabaseSync(applicationName, "1.0", "User Storage Database", 1000000);
+            return LocalStorage.LocalStorage.openDatabaseSync(that.applicationName, "1.0", "User Storage Database", 1000000);
         }
 
         function getDatabaseTransaction(statement, values) {
@@ -31,7 +32,7 @@ var QReddit = function(userAgent, applicationName) {
             return response;
         }
 
-        root._addUser = function(username, passwd) {
+        that._addUser = function(username, passwd) {
             var subscribed = "";
             var dbTransaction = getDatabaseTransaction('INSERT OR REPLACE INTO RedditUsers VALUES (?,?,?);',
                                                        [username, passwd, subscribed]);
@@ -42,9 +43,9 @@ var QReddit = function(userAgent, applicationName) {
             }
         }
 
-        root._removeUser = function(username) {
+        that._removeUser = function(username) {
             //Check if username is stored in database
-            if(!root._isUserStored(username)) {
+            if(!that._isUserStored(username)) {
                 throw "Error: _removeUser(): Username \"" + username + "\" is not stored in table.";
             }
             //Check if username given is the active user
@@ -60,9 +61,9 @@ var QReddit = function(userAgent, applicationName) {
             }
         }
 
-        root._getUser = function(username) {
+        that._getUser = function(username) {
             //Check if username is stored in database
-            if(!root._isUserStored(username)) {
+            if(!that._isUserStored(username)) {
                 throw "Error: _getUser(): Username \"" + username + "\" is not stored in table.";
             }
 
@@ -85,7 +86,7 @@ var QReddit = function(userAgent, applicationName) {
             return userObj;
         }
 
-        root._getActiveUserFromDB = function() {
+        that._getActiveUserFromDB = function() {
             //Do not use this function. Use getActiveUser(). This function is for initialization purposes only.
             var activeUser = "";
             try {
@@ -104,20 +105,20 @@ var QReddit = function(userAgent, applicationName) {
             if (response.json.data === undefined) throw response.json.errors[0][1];
         }
 
-        root._loginUser = function(username, passwd, callback) {
+        that._loginUser = function(username, passwd, callback) {
             var loginConnObj;
-            root.notifier.authStatus = 'loading';
+            that.notifier.authStatus = 'loading';
 
-            if (username !== root.notifier.currentAuthUser && root.notifier.currentAuthUser !== "") {
+            if (username !== that.notifier.currentAuthUser && that.notifier.currentAuthUser !== "") {
                 //A different user is already logged in. We must log out first.
 
                 //Since we're calling getAPIConnection() inside a function, we can't return the Connection object it gives.
                 //Instead we mirror its responses with a dummy Connection object.
                 loginConnObj = createObject("ConnectionObject.qml");
 
-                var logoutConnObj = root.logout(true);
+                var logoutConnObj = that.logout(true);
                 logoutConnObj.onSuccess.connect(function(){
-                    var apiLoginConnObj = root.getAPIConnection('login', {
+                    var apiLoginConnObj = that.getAPIConnection('login', {
                                                                     user: username,
                                                                     passwd: passwd
                                                                 });
@@ -128,7 +129,7 @@ var QReddit = function(userAgent, applicationName) {
                 });
             } else {
                 //No one is logged in.
-                loginConnObj = root.getAPIConnection('login', {
+                loginConnObj = that.getAPIConnection('login', {
                                                          user: username,
                                                          passwd: passwd
                                                      });
@@ -146,39 +147,39 @@ var QReddit = function(userAgent, applicationName) {
                 loginConnObj.success();
             });
             loginConnObj.onSuccess.connect(function() {
-                root.modhash = loginConnObj.response.modhash;
+                that.modhash = loginConnObj.response.modhash;
                 console.log("Log: Logged in \"" + username + "\" successfully.");
-                root.notifier.authStatus = 'done';
-                root.notifier.currentAuthUser = username;
+                that.notifier.authStatus = 'done';
+                that.notifier.currentAuthUser = username;
             });
             loginConnObj.onError.connect(function (response) {
-                root.notifier.authStatus = 'error';
+                that.notifier.authStatus = 'error';
             });
 
             return loginConnObj;
         }
 
-        root._isUserStored = function(username) {
-            var storedUsers = root.getUsers();
+        that._isUserStored = function(username) {
+            var storedUsers = that.getUsers();
             return (storedUsers.indexOf(username) !== -1 || username === "");
         }
 
-        root._setActiveUser = function(username) {
+        that._setActiveUser = function(username) {
             //Check if username is stored in database
-            if(!root._isUserStored(username) && username !== "") {
+            if(!that._isUserStored(username) && username !== "") {
                 throw "Error: _setActiveUser(): Username \"" + username + "\" is not stored in table.";
             }
             var dbTransaction = getDatabaseTransaction('UPDATE ActiveRedditUser SET username=?;', [username]);
             if (dbTransaction.rowsAffected > 0){
                 console.log("Log: Set \"" + username + "\" as the active user")
                 activeUser = username
-                root.notifier.activeUser = activeUser;
+                that.notifier.activeUser = activeUser;
             } else {
                 throw "Error: _setActiveUser(): Transaction failed."
             }
         }
 
-        root.getUsers = function() {
+        that.getUsers = function() {
             //Returns an array of usernames stored in the `users` table.
             var users = [];
             try {
@@ -193,14 +194,14 @@ var QReddit = function(userAgent, applicationName) {
             return users;
         }
 
-        root.getActiveUser = function() {
+        that.getActiveUser = function() {
             return activeUser || "";
         }
 
 
-        root.updateSubscribedArray = function() {
+        that.updateSubscribedArray = function() {
             //Returns a Connection QML object. Updates the activeUser's subscribed subreddits from the internet.
-            var username = root.getActiveUser();
+            var username = that.getActiveUser();
             var isAUser = username !== "";
             var subsrConnObj;
 
@@ -215,7 +216,7 @@ var QReddit = function(userAgent, applicationName) {
             }
 
             function updateMoreSubscribed(after) {
-                var subsrConnObj = root.getAPIConnection("subreddits_mine subscriber", {
+                var subsrConnObj = that.getAPIConnection("subreddits_mine subscriber", {
                                                              after: after,
                                                              limit: 100
                                                          });
@@ -237,9 +238,9 @@ var QReddit = function(userAgent, applicationName) {
             }
 
             if (isAUser) {
-                subsrConnObj = root.getAPIConnection("subreddits_mine subscriber", {limit: 100});
+                subsrConnObj = that.getAPIConnection("subreddits_mine subscriber", {limit: 100});
             } else {
-                subsrConnObj = root.getAPIConnection("subreddits_default");
+                subsrConnObj = that.getAPIConnection("subreddits_default");
             }
 
             subsrConnObj.onConnectionSuccess.connect(function(response){
@@ -272,15 +273,15 @@ var QReddit = function(userAgent, applicationName) {
             return subsrConnObj;
         }
 
-        root.getSubscribedArray = function(username) {
+        that.getSubscribedArray = function(username) {
             //Returns a stored user's subscribed subreddits.
             //If username is not passed, the activeUser's subreddits will be returned.
             var subscribed;
-            username = username || root.getActiveUser();
+            username = username || that.getActiveUser();
 
             //Check if username is stored in database
-            if(!root._isUserStored(username)) {
-                username = root.getActiveUser();
+            if(!that._isUserStored(username)) {
+                username = that.getActiveUser();
             }
 
             try {
@@ -306,8 +307,8 @@ var QReddit = function(userAgent, applicationName) {
                 getDatabaseTransaction('INSERT INTO ActiveRedditUser SELECT "" WHERE NOT EXISTS (SELECT * FROM ActiveRedditUser LIMIT 1)');
                 getDatabaseTransaction('INSERT INTO RedditUsers(username, passwd, subscribed) SELECT "", "", "" WHERE NOT EXISTS (SELECT * FROM RedditUsers LIMIT 1)');
                 //Set the active user
-                activeUser = root._getActiveUserFromDB();
-                root.notifier.activeUser = activeUser;
+                activeUser = that._getActiveUserFromDB();
+                that.notifier.activeUser = activeUser;
             } catch (error) {
                 throw "Error: QReddit initializeDatabase: \"" + error + "\""
             }
@@ -319,10 +320,10 @@ var QReddit = function(userAgent, applicationName) {
     this.loginNewUser = function(username, password) {
         //Returns a Connection QML object. Authenticates a new user.
         //  If successful, stores the new user to the `RedditUsers` table and sets it as the active user.
-        var root = this;
+        var that = this;
         var loginConnObj = this._loginUser(username, password, function() {
-            root._addUser(username, password);
-            root._setActiveUser(username);
+            that._addUser(username, password);
+            that._setActiveUser(username);
         });
         return loginConnObj;
     }
@@ -379,7 +380,7 @@ var QReddit = function(userAgent, applicationName) {
 
         var password = "",
             userError = "",
-            root = this;
+            that = this;
 
         try {
             password = this._getUser(username).passwd;
@@ -388,8 +389,8 @@ var QReddit = function(userAgent, applicationName) {
             userError = error;
         }
 
-        var loginConnObj = root._loginUser(username, password, function() {
-            root._setActiveUser(username);
+        var loginConnObj = that._loginUser(username, password, function() {
+            that._setActiveUser(username);
         });
 
         return loginConnObj;
@@ -402,14 +403,14 @@ var QReddit = function(userAgent, applicationName) {
         this.notifier.authStatus = 'loading';
 
         var logoutConnObj = this.getAPIConnection('logout');
-        var root = this;
+        var that = this;
         logoutConnObj.onError.connect(function(error){
             logoutConnObj.success();
         });
         logoutConnObj.onSuccess.connect(function(){
-            if(!loadingAuth) root.notifier.authStatus = 'none';
-            root.notifier.currentAuthUser = "";
-            root._setActiveUser("");
+            if(!loadingAuth) that.notifier.authStatus = 'none';
+            that.notifier.currentAuthUser = "";
+            that._setActiveUser("");
         });
 
         return logoutConnObj;
@@ -434,3 +435,5 @@ var QReddit = function(userAgent, applicationName) {
         return new UserObj(this, username || "");
     }
 }
+
+QReddit.prototype = new BaseReddit()

@@ -7,7 +7,7 @@ import "Utils/Misc.js" as MiscUtils
 Item {
     id: postPageItem
 
-    property var postObj: null
+    property var postObj: activePostObj//activePostItem.postObj
     property Flickable flickable
     property WebView __webSection: webSection
     property string webUrl: webSection.url
@@ -16,11 +16,6 @@ Item {
     property string subTitle: postObj ? MiscUtils.simpleFixHtmlChars(postObj.data.title) : ""
     property bool linkOpen: commentsSection.state == "linkOpen"
     property bool canBeToggled: webSection.canBeOpened && postObj != null
-    property string vote: ""
-
-    onPostObjChanged: {
-        vote = postObj.data.likes === true ? "up" : postObj.data.likes === false ? "down" : ""
-    }
 
     function openPostContent(content, forceComments) {
         if (typeof content === "string") {
@@ -31,33 +26,19 @@ Item {
             //content is a postObj
             if(content.data.is_self || forceComments) {
                 commentsSection.show()
-                if(content === postObj) return
-                postObj = content
+                if(postObj && content.data.name === postObj.data.name) return
+                activePostObj = content
                 webSection.open("about:blank")
+                reloadComments()
             } else {
-                postObj = content
+                if(postObj && content.data.name === postObj.data.name) return
+                activePostObj = content
                 webSection.clearOpen(postObj.data.url)
                 webSection.openPeekBG()
+                reloadComments()
             }
         }
     }
-
-    /*function openLink(link) {
-        commentsSection.peek()
-        webSection.open(link)
-    }
-
-    function openNewLink(newPostObj) {
-        postObj = newPostObj
-        webSection.clearOpen(postObj.data.url)
-        webSection.openPeekBG()
-    }
-
-    function openComments(newPostObj) {
-        postObj = newPostObj
-        webSection.open("about:blank")
-        commentsSection.show()
-    }*/
 
     function toggle() {
         var cstate = commentsSection.state
@@ -73,6 +54,10 @@ Item {
 
     function reloadComments() {
         commentsPageItem.reload()
+    }
+
+    function insertCommentObj(commentObj) {
+        commentsPageItem.insert(commentObj)
     }
 
     Header {
@@ -323,7 +308,6 @@ Item {
 
         CommentsPageItem {
             id: commentsPageItem
-            postObj: postPageItem.postObj
         }
 
         Connections {

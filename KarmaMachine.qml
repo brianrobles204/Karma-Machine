@@ -31,6 +31,9 @@ MainView {
 
     property var redditObj: new QReddit.QReddit("Karma Machine Reddit App 0.78", "karma-machine")
     property var redditNotifier: redditObj.notifier
+    property var activePostObj
+
+    signal resetPostObj
 
     function togglePostPageItem() {
         postPageItem.toggle()
@@ -257,7 +260,10 @@ MainView {
 
                     onCancelClicked: PopupUtils.close(commentComposerSheet)
                     onConfirmClicked: {
-                        actionHandler.comment(commentTextArea.text, postPageItem.postObj.data.name)
+                        var commentConnObj = postPageItem.postObj.comment(commentTextArea.text)
+                        commentConnObj.onSuccess.connect(function() {
+                            postPageItem.insertCommentObj(commentConnObj.response)
+                        })
                         PopupUtils.close(commentComposerSheet)
                     }
                 }
@@ -288,38 +294,34 @@ MainView {
                                 text: "Comment"
                                 iconSource: "media/Comments.png"
                                 enabled: redditNotifier.isLoggedIn
-                                onTriggered: PopupUtils.open(commentComposerSheetComponent) //actionHandler.comment("test", postPageItem.postObj.data.name)
+                                onTriggered: PopupUtils.open(commentComposerSheetComponent)
                             }
                         }
                         ToolbarButton {
                             action: Action {
                                 text: "Upvote"
-                                iconSource: postPageItem.vote == "up" ? "media/toolbar/up-vote.png" : "media/toolbar/up-empty.png"
+                                iconSource: activePostObj.data.likes === true ? "media/toolbar/up-vote.png" : "media/toolbar/up-empty.png"
                                 enabled: redditNotifier.isLoggedIn
                                 onTriggered: {
-                                    if(postPageItem.vote == "up") {
-                                        postPageItem.vote = ""
-                                        actionHandler.unvote(postPageItem.postObj.data.name)
-                                    } else {
-                                        postPageItem.vote = "up"
-                                        actionHandler.upvote(postPageItem.postObj.data.name)
-                                    }
+                                    var voteConnObj = activePostObj.upvote()
+                                    voteConnObj.onSuccess.connect(function(){
+                                        //Update the comment object (as it does not emit a changed signal automatically)
+                                        activePostObjChanged()
+                                    })
                                 }
                             }
                         }
                         ToolbarButton {
                             action: Action {
                                 text: "Downvote"
-                                iconSource: postPageItem.vote == "down" ? "media/toolbar/down-vote.png" : "media/toolbar/down-empty.png"
+                                iconSource: activePostObj.data.likes === false ? "media/toolbar/down-vote.png" : "media/toolbar/down-empty.png"
                                 enabled: redditNotifier.isLoggedIn
                                 onTriggered: {
-                                    if(postPageItem.vote == "down") {
-                                        postPageItem.vote = ""
-                                        actionHandler.unvote(postPageItem.postObj.data.name)
-                                    } else {
-                                        postPageItem.vote = "down"
-                                        actionHandler.downvote(postPageItem.postObj.data.name)
-                                    }
+                                    var voteConnObj = activePostObj.downvote()
+                                    voteConnObj.onSuccess.connect(function(){
+                                        //Update the comment object (as it does not emit a changed signal automatically)
+                                        activePostObjChanged()
+                                    })
                                 }
                             }
                         }
@@ -350,15 +352,7 @@ MainView {
                             }
                             visible: linkOpen
                         }
-                        /*ToolbarButton {
-                            action: Action {
-                                text: "Forward"
-                                iconSource: "media/toolbar/go-next.png"
-                                enabled: postPageItem.__webSection.canGoForward
-                                onTriggered: postPageItem.__webSection.goForward()
-                            }
-                            visible: linkOpen
-                        }*//* Ubuntu Touch does not support services, apparently. No API for opening links externally as of yet
+                        /* Ubuntu Touch does not support services, apparently. No API for opening links externally as of yet
                         //TODO: implement opening links, look at source code of Shorts or something
                         ToolbarButton {
                             action: Action {
@@ -373,10 +367,6 @@ MainView {
                 }
             }
         }
-    }
-
-    QtObject {
-        id: actionHandler
     }
 
     /*
@@ -469,7 +459,6 @@ MainView {
         loginConnObj.onSuccess.connect(function(){
             frontPageItem.reloadPage()
         })
-
 
         var component = Qt.createComponent("HeaderArea.qml")
         var header = component.createObject(pageStack.header)

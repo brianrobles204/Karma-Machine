@@ -3,41 +3,61 @@ import Ubuntu.Components 0.1
 
 SwipeBox{
     id: swipeBox
+
     property var postObj
+    readonly property string vote: postObj.data.likes === true ? "up" : postObj.data.likes === false ? "down" : ""
+
+    signal commentsTriggered
+
     height: headerAdditionHolder.height + postBox.height + divider.height
     width: parent.width
-    property string vote: postObj.data.likes === true ? "up" : postObj.data.likes === false ? "down" : ""
 
-    onClicked: openPostContent(postObj)
+    onClicked: {
+        window.resetPostObj()
+        openPostContent(postObj)
+        onActivePostObjChanged.connect(updatePostObj)
+    }
+    onCommentsTriggered: {
+        window.resetPostObj()
+        openPostContent(postObj, true)
+        onActivePostObjChanged.connect(updatePostObj)
+    }
 
     onSwipedRight: {
         checkTutorial()
-        if(storageHandler.modhash !== "") {
-            if(vote == "up") {
-                vote = ""
-                actionHandler.unvote(postObj.data.name)
-            } else {
-                vote = "up"
-                actionHandler.upvote(postObj.data.name)
-            }
+        if(redditNotifier.isLoggedIn) {
+            var voteConnObj = postObj.upvote()
+            voteConnObj.onSuccess.connect(function(){
+                //Update the comment object (as it does not emit a changed signal automatically)
+                activePostObjChanged()
+            })
         }
     }
     onSwipedLeft: {
         checkTutorial()
-        if(storageHandler.modhash !== "") {
-            if(vote == "down") {
-                vote = ""
-                actionHandler.unvote(postObj.data.name)
-            } else {
-                vote = "down"
-                actionHandler.downvote(postObj.data.name)
-            }
+        if(redditNotifier.isLoggedIn) {
+            var voteConnObj = postObj.downvote()
+            voteConnObj.onSuccess.connect(function(){
+                //Update the comment object (as it does not emit a changed signal automatically)
+                activePostObjChanged()
+            })
         }
     }
 
+    function updatePostObj(){
+        postObj = activePostObj
+    }
+
     function checkTutorial() {
-        if(postObj.data.id == "tutorialID") {
+        if(postObj.data.id === "tutorialID") {
             settingsHandler.firstTime = false
+        }
+    }
+
+    Connections {
+        target: window
+        onResetPostObj: {
+            onActivePostObjChanged.disconnect(updatePostObj)
         }
     }
 
@@ -71,6 +91,8 @@ SwipeBox{
     PostLayout {
         id: postBox
         anchors.top: headerAdditionHolder.bottom
+
+        onCommentsTriggered: swipeBox.commentsTriggered()
     }
 
     Item {

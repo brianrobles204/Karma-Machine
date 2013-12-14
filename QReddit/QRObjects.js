@@ -107,7 +107,7 @@ function createTimer(timeout) {
 }
 
 
-var BaseReddit = function(userAgent) {
+var BaseReddit = function() {
     this.modhash = "";
 
     this.toString = function() {
@@ -134,7 +134,7 @@ var BaseReddit = function(userAgent) {
 
         request.open(method, url, true);
         request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-        request.setRequestHeader("User-Agent", userAgent);
+        request.setRequestHeader("User-Agent", this.userAgent);
         request.setRequestHeader("Connection", "close");
         if(this.modhash !== "") request.setRequestHeader("X-Modhash", this.modhash);
 
@@ -202,7 +202,7 @@ var BaseReddit = function(userAgent) {
 
         for (var key in paramObj) {
             if(paramStr !== "") paramStr += "&"
-            paramStr += key + "=" + paramObj[key];
+            paramStr += key + "=" + encodeURIComponent(paramObj[key]);
         }
 
         if(paramStr !== "") redditURL += "?" + paramStr;
@@ -241,19 +241,19 @@ var SubredditObj = function (reddit, srName) {
     }
 
     this.getPostsListing = function(sort, paramObj) {
-        //Returns a Connection object. Emmits onSuccess() when finished. Has a response property containing the Posts Array.
+        //Returns a Connection object. Has a response property containing the Posts Array.
         var apiCommand = getCommand(sort);
         paramObj = paramObj || {};
         paramObj.limit = paramObj.limit || 25;
         this._setCurrentProperties(apiCommand, paramObj);
 
         var connSubrObj = reddit.getAPIConnection(apiCommand, paramObj);
-        var root = this;
+        var that = this;
 
         connSubrObj.onConnectionSuccess.connect(function(response){
-            root.data = response.data;
+            that.data = response.data;
             var postObjArray = getPostObjArray(response.data.children)
-            root.data.children = postObjArray;
+            that.data.children = postObjArray;
             connSubrObj.response = postObjArray;
             connSubrObj.success();
         });
@@ -266,6 +266,7 @@ var SubredditObj = function (reddit, srName) {
     }
 
     this.getMoreListing = function(limitNo) {
+        //Returns a Connection object. Has a response property containing the Posts Array.
         if (this.currentCommand === "") throw "Error: getMoreListing(): Cannot get more."
 
         var paramObj = this.currentParamObj;
@@ -273,12 +274,12 @@ var SubredditObj = function (reddit, srName) {
         paramObj.after = this.data.after;
 
         var connMoreObj = reddit.getAPIConnection(this.currentCommand, paramObj);
-        var root = this;
+        var that = this;
 
         connMoreObj.onConnectionSuccess.connect(function(response){
             var postObjArray = getPostObjArray(response.data.children)
-            root.data.children.push(postObjArray);
-            root.data.after = response.data.after;
+            that.data.children.push(postObjArray);
+            that.data.after = response.data.after;
             connMoreObj.response = postObjArray;
             connMoreObj.success();
         });
@@ -287,28 +288,168 @@ var SubredditObj = function (reddit, srName) {
     }
 }
 
+var BaseThing = function(reddit, thing) {
+
+    for (var key in thing) {
+        this[key] = thing[key];
+    }
+
+    this.toString = function() {
+        return "[object BaseThing]"
+    }
+
+    this.comment = function(text) {
+        //Submit a new comment or reply to a message
+        //Returns a Connection Object. Has a response property containing the new comment/reply
+        var commentConnObj = reddit.getAPIConnection('comment', {
+                                                         text: text,
+                                                         thing_id: this.data.name
+                                                     });
+        var that = this;
+        commentConnObj.onConnectionSuccess.connect(function(response){
+            if(response.json.data) {
+                var comment = response.json.data.things[0]
+                //Reddit returns a "thing" object, but its interface differs from a normal comment/reply
+                //Here, we extend it so it behaves like normal.
+                comment.data.name = comment.data.id;
+                comment.data.body = comment.data.contentText;
+                comment.data.author = reddit.notifier.currentAuthUser;
+
+                if (that.toString() === "[object CommentObject]" || that.toString() === "[object PostObject]") {
+                    commentConnObj.response = new CommentObj(reddit, comment);
+                } //TODO handle replies to message objects
+
+                commentConnObj.success();
+            } else {
+                commentConnObj.error(response.json.errors[0][1]);
+            }
+        });
+
+        return commentConnObj;
+    }
+
+    this.report = function() {
+        //
+    }
+}
+
+var ThingObj = function(reddit, thing) {
+
+    BaseThing.apply(this, arguments);
+
+    this.toString = function() {
+        return "[object ThingObject]"
+    }
+
+    this.deleteThing = function() {
+        //Simple `delete` is a reserved name in javascript
+    }
+
+    this.edit = function(text) {
+        //
+    }
+
+    this.vote = function(direction) {
+        //direction is an int. One of (0, 1, -1)
+        var voteConnObj = reddit.getAPIConnection("vote", {
+                                                    dir: direction,
+                                                    id: this.data.name
+                                                });
+        var that = this;
+        voteConnObj.onConnectionSuccess.connect(function(response){
+            if(direction === 0) {
+                that.data.likes = null
+            } else if(direction === 1) {
+                that.data.likes = true
+            } else if(direction === -1) {
+                that.data.likes = false
+            }
+
+            voteConnObj.success()
+        })
+        return voteConnObj
+    }
+
+    this.unvote = function() {
+        //Un-votes a thingObj.
+        return this.vote(0);
+    }
+
+    this.upvote = function() {
+        //Either upvotes or un-votes a thingObj, based on its current vote direction
+        if (!(this.data.likes === true)) {
+            return this.vote(1);
+        } else {
+            return this.unvote();
+        }
+    }
+
+    this.downvote = function() {
+        //Either downvotes or un-votes a thingObj, based on its current vote direction
+        if (!(this.data.likes === false)) {
+            return this.vote(-1);
+        } else {
+            return this.unvote();
+        }
+    }
+
+}
+
 var PostObj = function(reddit, post) {
 
-    for (var key in post) {
-        this[key] = post[key];
+    ThingObj.apply(this, arguments);
+
+    function getCommentsObjArray(commentsArray) {
+        var commentsObjArray = [];
+        for(var i = 0; i < commentsArray.length; i++) {
+            commentsObjArray.push(new CommentObj(reddit, commentsArray[i]));
+        }
+        return commentsObjArray;
     }
 
     this.toString = function() {
         return "[object PostObject]"
     }
 
+    this.hide = function() {
+        //
+    }
+
+    this.save = function() {
+        //
+    }
+
+    this.unhide = function() {
+        //
+    }
+
+    this.unsave = function() {
+        //
+    }
+
+    //TODO: Deprecate this in favor of getComments(), which returns the entire response as opposed to simply the listing
     this.getCommentsListing = function(sort, paramObj) {
         paramObj = paramObj || {};
         paramObj.sort = sort;
         var apiCommand = 'comments ' + this.data.id;
 
-        var connCommentsObj = reddit.getAPIConnection(apiCommand, paramObj);
-        connCommentsObj.onConnectionSuccess.connect(function(response){
-            connCommentsObj.response = response[1].data.children;
-            connCommentsObj.success();
+        var commentsConnObj = reddit.getAPIConnection(apiCommand, paramObj);
+        commentsConnObj.onConnectionSuccess.connect(function(response){
+            var commentsObjArray = getCommentsObjArray(response[1].data.children)
+            commentsConnObj.response = commentsObjArray;
+            commentsConnObj.success();
         });
 
-        return connCommentsObj;
+        return commentsConnObj;
+    }
+}
+
+var CommentObj = function(reddit, comment) {
+
+    ThingObj.apply(this, arguments);
+
+    this.toString = function() {
+        return "[object CommentObject]"
     }
 }
 
