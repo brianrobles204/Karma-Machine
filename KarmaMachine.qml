@@ -260,9 +260,10 @@ MainView {
 
                     onCancelClicked: PopupUtils.close(commentComposerSheet)
                     onConfirmClicked: {
+                        var postPage = postPageItem
                         var commentConnObj = postPageItem.postObj.comment(commentTextArea.text)
                         commentConnObj.onSuccess.connect(function() {
-                            postPageItem.insertCommentObj(commentConnObj.response)
+                            postPage.insertCommentObj(commentConnObj.response)
                         })
                         PopupUtils.close(commentComposerSheet)
                     }

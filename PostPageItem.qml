@@ -57,7 +57,8 @@ Item {
     }
 
     function insertCommentObj(commentObj) {
-        commentsPageItem.insert(commentObj)
+        commentsPageItem.insertComment(commentObj)
+        commentsSection.contentY = commentsSection.contentHeight - commentsSection.height
     }
 
     Header {

@@ -314,6 +314,10 @@ var BaseThing = function(reddit, thing) {
                 comment.data.name = comment.data.id;
                 comment.data.body = comment.data.contentText;
                 comment.data.author = reddit.notifier.currentAuthUser;
+                comment.data.likes = true;
+                comment.data.created = comment.data.created_utc = Math.floor(Date.now() / 1000);
+                comment.data.score = comment.data.ups = 1;
+                comment.data.downs = 0;
 
                 if (that.toString() === "[object CommentObject]" || that.toString() === "[object PostObject]") {
                     commentConnObj.response = new CommentObj(reddit, comment);

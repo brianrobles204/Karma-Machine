@@ -4,16 +4,24 @@ import "Utils/Misc.js" as MiscUtils
 
 SwipeBox{
     id: swipeBox
+
     property var commentObj
-    property Rectangle bgRect: bgRect
+    property int level: 1
+    property int additionalHeight: 0
     property string vote: commentObj.data.likes === true ? "up" : commentObj.data.likes === false ? "down" : ""
+
+    property color primaryColor: "#f2f2f2"
+    property color altColor: "#eaeaea"
+
+    readonly property bool isLevelOdd: ((level % 2) === 1)
 
     anchors {
         left: parent.left
-        leftMargin: units.gu(1)
+        leftMargin: units.gu(1) * level
         right: parent.right
         rightMargin: units.gu(1)
     }
+
     height: commentInfoLabel.height + commentBody.height + units.gu(2.5)
 
     onSwipedRight: {
@@ -75,7 +83,7 @@ SwipeBox{
 
     Label {
         id: commentBody
-        text: commentObj ? MiscUtils.getHtmlText(commentObj.data.body, bgRect.color) : ""
+        text: commentObj ? MiscUtils.getHtmlText(commentObj.data.body, "#000000") : ""
         textFormat: Text.RichText
         anchors {
             top: commentInfoLabel.bottom
@@ -98,8 +106,8 @@ SwipeBox{
             left: parent.left
             right: parent.right
         }
-        height: parent.height
-        color: "#f2f2f2"
+        height: parent.height + swipeBox.additionalHeight
+        color: swipeBox.isLevelOdd ? primaryColor : altColor
         z: -2
     }
 }

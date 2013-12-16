@@ -11,8 +11,8 @@ Item {
         commentsList.loadComments()
     }
 
-    function insert(commentObj) {
-        //
+    function insertComment(commentObj) {
+        commentsList.insertComment(commentObj)
     }
 
     height: childrenRect.height + units.gu(0.4)
@@ -141,23 +141,17 @@ Item {
 
     Column {
         id: commentsList
+
         property var postObj: activePostObj
         property bool loading: true
 
-        anchors {
-            top: spaceAndCommentInfo.bottom
-            topMargin: units.gu(0.5)
-            left: parent.left
-            right: parent.right
-            leftMargin: units.gu(1.5)
-            rightMargin: units.gu(1.5)
-        }
+        function insertComment(commentObj) {
+            var component = Qt.createComponent("CommentItem.qml")
+            var commentItem = component.createObject(commentsList, { commentObj: commentObj, level: 1 })
+            var spaceRect = Qt.createQmlObject("import QtQuick 2.0; Item{width: 1; height: units.gu(1.6)}", commentsList)
 
-        Connections {
-            target: settingsHandler
-            onCommentsSortChanged: {
-                commentsList.loadComments()
-            }
+            activePostObj.data.num_comments += 1
+            activePostObjChanged()
         }
 
         function clearComments() {
@@ -183,33 +177,42 @@ Item {
         }
 
         function createComment(commentObj, level) {
-            if(commentObj.kind == "t1"){
-                var component = Qt.createComponent("CommentsItem.qml")
-                var commentItem = component.createObject(commentsList, {"commentObj": commentObj})
-                if(commentItem == null) {
-                    console.log("Error creating object")
-                }
+            if( commentObj.kind === "t1" ){
+                var component = Qt.createComponent("CommentItem.qml")
+                var commentItem = component.createObject(commentsList, { commentObj: commentObj, level: level })
+                var additionalHeight = 0
 
-                commentItem.anchors.leftMargin = units.gu(1) * level
-                var isLevelEven = ((level % 2) === 0)
-                if (isLevelEven) commentItem.bgRect.color = "#eaeaea"
-
-                var addToHeight = commentItem.height + units.gu(0.6)
                 if(commentObj.data.replies.data !== undefined) {
                     var childComments = commentObj.data.replies.data.children
                     for (var i = 0; i < childComments.length; i++){
-                        addToHeight += createComment(new QReddit.CommentObj(redditObj, childComments[i]), level + 1)
+                        additionalHeight += createComment(new QReddit.CommentObj(redditObj, childComments[i]), level + 1)
                     }
                 }
 
                 var spaceRect = Qt.createQmlObject("import QtQuick 2.0; Item{width: 1; height: units.gu(0.6)}", commentsList)
-                if (level === 1) spaceRect.height = units.gu(1)
-                commentItem.bgRect.height = addToHeight - units.gu(0.6)
+                if (level === 1) spaceRect.height = units.gu(1.6)
+                commentItem.additionalHeight = additionalHeight
 
-                return addToHeight
+                return additionalHeight + commentItem.height + units.gu(0.6)
             } else {
                 // TODO: "More" kind of comments
                 return 0
+            }
+        }
+
+        anchors {
+            top: spaceAndCommentInfo.bottom
+            topMargin: units.gu(0.5)
+            left: parent.left
+            right: parent.right
+            leftMargin: units.gu(1.5)
+            rightMargin: units.gu(1.5)
+        }
+
+        Connections {
+            target: settingsHandler
+            onCommentsSortChanged: {
+                commentsList.loadComments()
             }
         }
     }
