@@ -300,8 +300,10 @@ MainView {
                         }
                         ToolbarButton {
                             action: Action {
+                                property string voteImage: "media/toolbar/up-vote.png"
+                                property string emptyImage: "media/toolbar/up-empty.png"
                                 text: "Upvote"
-                                iconSource: activePostObj.data.likes === true ? "media/toolbar/up-vote.png" : "media/toolbar/up-empty.png"
+                                iconSource: activePostObj ? activePostObj.data.likes === true ? voteImage : emptyImage : emptyImage
                                 enabled: redditNotifier.isLoggedIn
                                 onTriggered: {
                                     var voteConnObj = activePostObj.upvote()
@@ -314,8 +316,10 @@ MainView {
                         }
                         ToolbarButton {
                             action: Action {
+                                property string voteImage: "media/toolbar/down-vote.png"
+                                property string emptyImage: "media/toolbar/down-empty.png"
                                 text: "Downvote"
-                                iconSource: activePostObj.data.likes === false ? "media/toolbar/down-vote.png" : "media/toolbar/down-empty.png"
+                                iconSource: activePostObj ? activePostObj.data.likes === false ? voteImage : emptyImage : emptyImage
                                 enabled: redditNotifier.isLoggedIn
                                 onTriggered: {
                                     var voteConnObj = activePostObj.downvote()

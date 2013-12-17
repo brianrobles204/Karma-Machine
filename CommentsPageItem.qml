@@ -2,7 +2,6 @@ import QtQuick 2.0
 import Ubuntu.Components 0.1
 import Ubuntu.Components.ListItems 0.1 as ListItems
 import Ubuntu.Components.Popups 0.1
-import "QReddit/QReddit.js" as QReddit
 
 Item {
     property var postObj: activePostObj
@@ -55,7 +54,7 @@ Item {
             }
             fontSize: "small"
             font.weight: Font.DemiBold
-            text: postObj ? postObj.data.num_comments : ""
+            text: postObj ? postObj.data.num_comments.toLocaleString() : ""
         }
 
         AbstractButton{
@@ -139,11 +138,12 @@ Item {
         }
     }
 
-    Column {
+    ListView {
         id: commentsList
 
         property var postObj: activePostObj
         property bool loading: true
+        property var activeCommentObj: []
 
         function insertComment(commentObj) {
             var component = Qt.createComponent("CommentItem.qml")
@@ -154,49 +154,47 @@ Item {
             activePostObjChanged()
         }
 
-        function clearComments() {
-            if(commentsList.children.length > 0) {
-                for (var i = 0; i < commentsList.children.length; i++) {
-                    commentsList.children[i].destroy()
-                }
-            }
-        }
-
         function loadComments() {
-            clearComments()
+            commentsListModel.clear()
             loading = true
+            activeCommentObj = []
             if (postObj == undefined) return
 
-            var commentsConnObj = postObj.getCommentsListing(settingsHandler.commentsSort)
+            var commentsConnObj = postObj.getComments(settingsHandler.commentsSort, {limit: 25})
             commentsConnObj.onSuccess.connect(function(){
                 loading = false
-                for (var i = 0; i < commentsConnObj.response.length; i++) {
-                    createComment(commentsConnObj.response[i], 1)
+                for (var i = 0; i < commentsConnObj.response[1].length; i++) {
+                    activeCommentObj.push(commentsConnObj.response[1][i])
+                    commentsListModel.append({kind: activeCommentObj[i].kind, level: 1, index: i})
                 }
+                setPostTimer.postObj = commentsConnObj.response[0]
+                setPostTimer.restart()
             });
         }
 
-        function createComment(commentObj, level) {
-            if( commentObj.kind === "t1" ){
-                var component = Qt.createComponent("CommentItem.qml")
-                var commentItem = component.createObject(commentsList, { commentObj: commentObj, level: level })
-                var additionalHeight = 0
+        model: ListModel {
+            id: commentsListModel
+        }
 
-                if(commentObj.data.replies.data !== undefined) {
-                    var childComments = commentObj.data.replies.data.children
-                    for (var i = 0; i < childComments.length; i++){
-                        additionalHeight += createComment(new QReddit.CommentObj(redditObj, childComments[i]), level + 1)
-                    }
+        delegate: Loader {
+            anchors {
+                left: parent.left
+                right: parent.right
+            }
+            source: {
+                if(kind === "t1") {
+                    return "CommentItem.qml"
+                } else if (kind === "more") {
+                    return "MoreItem.qml"
                 }
-
-                var spaceRect = Qt.createQmlObject("import QtQuick 2.0; Item{width: 1; height: units.gu(0.6)}", commentsList)
-                if (level === 1) spaceRect.height = units.gu(1.6)
-                commentItem.additionalHeight = additionalHeight
-
-                return additionalHeight + commentItem.height + units.gu(0.6)
-            } else {
-                // TODO: "More" kind of comments
-                return 0
+            }
+            Component.onCompleted: {
+                item.level = level
+                if(kind === "t1") {
+                    item.commentObj = commentsList.activeCommentObj[index]
+                } else if (kind === "more") {
+                    item.moreObj = commentsList.activeCommentObj[index]
+                }
             }
         }
 
@@ -207,6 +205,16 @@ Item {
             right: parent.right
             leftMargin: units.gu(1.5)
             rightMargin: units.gu(1.5)
+        }
+        height: count > 0 ? contentHeight : 0
+        interactive: false
+        spacing: units.gu(1.6)
+
+        Timer {
+            id: setPostTimer
+            property var postObj
+            interval: 1
+            onTriggered: activePostObj = postObj
         }
 
         Connections {

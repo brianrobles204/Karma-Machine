@@ -5,7 +5,9 @@ SwipeBox{
     id: swipeBox
 
     property var postObj
-    readonly property string vote: postObj.data.likes === true ? "up" : postObj.data.likes === false ? "down" : ""
+
+    readonly property string vote: postObj ? postObj.data.likes === true ? "up" : postObj.data.likes === false ? "down" : "" : ""
+    readonly property bool selected: activePostObj ? postObj.data.name === activePostObj.data.name : false
 
     signal commentsTriggered
 
@@ -29,7 +31,11 @@ SwipeBox{
             var voteConnObj = postObj.upvote()
             voteConnObj.onSuccess.connect(function(){
                 //Update the comment object (as it does not emit a changed signal automatically)
-                activePostObjChanged()
+                if (selected) {
+                    activePostObjChanged()
+                } else {
+                    postObjChanged()
+                }
             })
         }
     }
@@ -39,7 +45,11 @@ SwipeBox{
             var voteConnObj = postObj.downvote()
             voteConnObj.onSuccess.connect(function(){
                 //Update the comment object (as it does not emit a changed signal automatically)
-                activePostObjChanged()
+                if (selected) {
+                    activePostObjChanged()
+                } else {
+                    postObjChanged()
+                }
             })
         }
     }
@@ -91,6 +101,7 @@ SwipeBox{
     PostLayout {
         id: postBox
         anchors.top: headerAdditionHolder.bottom
+        selected: swipeBox.selected
 
         onCommentsTriggered: swipeBox.commentsTriggered()
     }

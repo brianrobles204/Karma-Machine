@@ -59,7 +59,8 @@ var GETPaths = ['comments', 'hot', 'new', 'rising', 'random', 'top', 'controvers
                 'subreddit_recommendations', 'subreddits_by_topic', 'subreddit_about', 'subreddits_search',
                 'subreddits_new', 'subreddits_popular', 'subreddits_banned', 'subreddits_mine', 'subreddits_default',
                 'user_about', 'user_where']
-var DefaultURL = 'www.reddit.com';
+var GetURL = 'www.reddit.com';
+var PostURL = 'api.reddit.com';
 var SecureURL = 'ssl.reddit.com';
 
 var PostsSort = {
@@ -159,11 +160,17 @@ var BaseReddit = function() {
 
 
     this.getAPIConnection = function(apiCommand, paramObj) {
-        var redditURL = 'http://' + DefaultURL;
+        var redditURL = '';
         var method = 'POST';
         var paramStr = '';
 
         if (!paramObj) paramObj = {};
+
+        if(GETPaths.indexOf(apiCommand) !== -1) {
+            redditURL = 'http://' + GetURL;
+        } else if(GETPaths.indexOf(apiCommand) === -1) {
+            redditURL = 'http://' + PostURL;
+        }
 
         if(SSLPaths.indexOf(apiCommand) !== -1) {
             redditURL = 'https://' + SecureURL;
@@ -210,6 +217,7 @@ var BaseReddit = function() {
         return this._getConnection(method, redditURL);
     }
 }
+
 
 var SubredditObj = function (reddit, srName) {
     this.srName = srName || "";
@@ -288,6 +296,28 @@ var SubredditObj = function (reddit, srName) {
     }
 }
 
+
+/*function thingResponseToObject(reddit, response, parent){
+    //Converts Reddit "thing" responses into proper comments/replies
+
+    var comment = response.json.data.things[0]
+    //Reddit returns a "thing" object, but its interface differs from a normal comment/reply
+    //Here, we extend it so it behaves like normal.
+    comment.data.name = comment.data.id;
+    comment.data.body = comment.data.contentText;
+    comment.data.author = reddit.notifier.currentAuthUser;
+    comment.data.likes = true;
+    comment.data.created = comment.data.created_utc = Math.floor(Date.now() / 1000);
+    comment.data.score = comment.data.ups = 1;
+    comment.data.downs = 0;
+
+    if (parent.toString() === "[object CommentObject]" ||
+            parent.toString() === "[object PostObject]" ||
+            parent.toString() === "[object MoreObject]") {
+        return new CommentObj(reddit, comment);
+    } //TODO handle replies to message objects
+}*/
+
 var BaseThing = function(reddit, thing) {
 
     for (var key in thing) {
@@ -308,21 +338,9 @@ var BaseThing = function(reddit, thing) {
         var that = this;
         commentConnObj.onConnectionSuccess.connect(function(response){
             if(response.json.data) {
-                var comment = response.json.data.things[0]
-                //Reddit returns a "thing" object, but its interface differs from a normal comment/reply
-                //Here, we extend it so it behaves like normal.
-                comment.data.name = comment.data.id;
-                comment.data.body = comment.data.contentText;
-                comment.data.author = reddit.notifier.currentAuthUser;
-                comment.data.likes = true;
-                comment.data.created = comment.data.created_utc = Math.floor(Date.now() / 1000);
-                comment.data.score = comment.data.ups = 1;
-                comment.data.downs = 0;
-
                 if (that.toString() === "[object CommentObject]" || that.toString() === "[object PostObject]") {
-                    commentConnObj.response = new CommentObj(reddit, comment);
+                    commentConnObj.response = new CommentObj(reddit, response.json.data.things[0])
                 } //TODO handle replies to message objects
-
                 commentConnObj.success();
             } else {
                 commentConnObj.error(response.json.errors[0][1]);
@@ -336,6 +354,7 @@ var BaseThing = function(reddit, thing) {
         //
     }
 }
+
 
 var ThingObj = function(reddit, thing) {
 
@@ -399,16 +418,27 @@ var ThingObj = function(reddit, thing) {
 
 }
 
+
 var PostObj = function(reddit, post) {
 
     ThingObj.apply(this, arguments);
 
-    function getCommentsObjArray(commentsArray) {
-        var commentsObjArray = [];
-        for(var i = 0; i < commentsArray.length; i++) {
-            commentsObjArray.push(new CommentObj(reddit, commentsArray[i]));
+    this._getCommentObjs = function(comments) {
+
+        var commentObjs = [];
+        for(var i = 0; i < comments.length; i++) {
+
+            if (comments[i].kind === "t1") {
+                if(comments[i].data.replies !== "") {
+                    comments[i].data.replies.data.children = this._getCommentObjs(comments[i].data.replies.data.children);
+                }
+                commentObjs.push(new CommentObj(reddit, comments[i]));
+            } else if (comments[i].kind === "more") {
+                commentObjs.push(new MoreObj(reddit, comments[i], this.data.name));
+            }
         }
-        return commentsObjArray;
+
+        return commentObjs;
     }
 
     this.toString = function() {
@@ -431,22 +461,42 @@ var PostObj = function(reddit, post) {
         //
     }
 
-    //TODO: Deprecate this in favor of getComments(), which returns the entire response as opposed to simply the listing
+    this.getComments = function(sort, paramObj) {
+        paramObj = paramObj || {};
+        paramObj.sort = sort;
+        var apiCommand = 'comments ' + this.data.id;
+
+        var commentsConnObj = reddit.getAPIConnection(apiCommand, paramObj);
+        var that = this;
+        commentsConnObj.onConnectionSuccess.connect(function(response){
+            var commentsResponse = [];
+            commentsResponse.push( new PostObj(reddit, response[0].data.children[0]) );
+            commentsResponse.push( that._getCommentObjs(response[1].data.children) );
+            commentsConnObj.response = commentsResponse;
+            commentsConnObj.success();
+        });
+
+        return commentsConnObj;
+    }
+
+    //DEPRECATED
     this.getCommentsListing = function(sort, paramObj) {
         paramObj = paramObj || {};
         paramObj.sort = sort;
         var apiCommand = 'comments ' + this.data.id;
 
         var commentsConnObj = reddit.getAPIConnection(apiCommand, paramObj);
+        var that = this;
         commentsConnObj.onConnectionSuccess.connect(function(response){
-            var commentsObjArray = getCommentsObjArray(response[1].data.children)
-            commentsConnObj.response = commentsObjArray;
+            var commentObjs = that._getCommentObjs(response[1].data.children)
+            commentsConnObj.response = commentObjs;
             commentsConnObj.success();
         });
 
         return commentsConnObj;
     }
 }
+
 
 var CommentObj = function(reddit, comment) {
 
@@ -456,6 +506,37 @@ var CommentObj = function(reddit, comment) {
         return "[object CommentObject]"
     }
 }
+
+
+var MoreObj = function(reddit, thing, link) {
+
+    for (var key in thing) {
+        this[key] = thing[key];
+    }
+
+    this.toString = function() {
+        return "[object MoreObject]";
+    }
+
+    this.link = link;
+
+    this.getMoreComments = function(sort) {
+        var paramObj = {
+            link_id: this.link,
+            children: this.data.children
+        };
+        if (sort) paramObj.sort = sort;
+
+        var moreConnObj = reddit.getAPIConnection('morechildren', paramObj);
+        moreConnObj.onConnectionSuccess.connect(function(response){
+            moreConnObj.response = response.json.data.things;
+            moreConnObj.success();
+        });
+
+        return moreConnObj;
+    }
+}
+
 
 var UserObj = function(reddit, username) {
 

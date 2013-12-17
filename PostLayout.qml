@@ -6,6 +6,13 @@ Item {
     id: postRow
 
     property real spacingConstant: units.gu(1.25)
+    property bool selected
+    readonly property bool stickied: postObj ? postObj.data.stickied : false
+
+    property color primaryColor: "#f2f2f2"
+    property color selectedColor: "#ffeaae"
+    property color stickiedColor: "#feffae"
+
     signal commentsTriggered
 
     height: Math.max(postColumn.height, postIcon.height) + units.gu(2.5)
@@ -17,12 +24,12 @@ Item {
     Rectangle{
         anchors.fill: parent
         z: -1
-        color: postObj ? postObj.data.stickied ? "#feffae" : "#f2f2f2" : "#f2f2f2"
+        color: !postRow.selected ? !postRow.stickied ? primaryColor : stickiedColor : selectedColor
     }
 
     UbuntuShape {
         id: postIcon
-        //color: "lightblue"
+        color: "#2e0020"
         anchors{
             top: parent.top
             topMargin: postRow.spacingConstant

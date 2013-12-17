@@ -5,8 +5,8 @@ import "Utils/Misc.js" as MiscUtils
 SwipeBox{
     id: swipeBox
 
-    property var postObj: activePostObj//activePostItem.postObj
-    property string vote: postObj.data.likes === true ? "up" : postObj.data.likes === false ? "down" : ""
+    property var postObj: activePostObj
+    property string vote: postObj ? postObj.data.likes === true ? "up" : postObj.data.likes === false ? "down" : "" : ""
 
     height: descHeader.height + divider.height + descContent.height
     anchors {

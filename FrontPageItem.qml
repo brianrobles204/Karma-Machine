@@ -95,6 +95,7 @@ Item {
             }
 
             function clearListing() {
+                activePostObj = undefined
                 headerAddition.isOpen = false
 
                 if(containsPosts) {
@@ -303,19 +304,32 @@ Item {
                         //To allow for MultiReddits or Favorites, etc
                         ListView {
                             id: subredditListView
+
                             clip: true
                             width: parent.width
                             height: frontPageItem.height - (headerAddition.y + headerAddition.height + units.gu(5))
 
                             Component.onCompleted: {
                                 var index = redditObj.getSubscribedArray().indexOf(postList.subreddit)
-                                positionViewAtIndex(index, ListView.Beginning)
+                                if(index !== -1){
+                                    positionViewAtIndex(index, ListView.Beginning)
+                                } else {
+                                    timer.start()
+                                }
+                            }
+
+                            Timer {
+                                id: timer
+                                interval: 1
+                                onTriggered: {
+                                    subredditListView.contentY = -100
+                                    subredditListView.returnToBounds()
+                                }
                             }
 
                             header: Column {
                                 anchors { left: parent.left; right: parent.right }
                                 height: childrenRect.height;
-                                z: 100
                                 Row {
                                     anchors.horizontalCenter: parent.horizontalCenter
                                     height: units.gu(8); width: childrenRect.width
@@ -362,6 +376,23 @@ Item {
                                     }*/
                                 }
                                 ListItems.ThinDivider {}
+                                ListItems.Header {
+                                    text: "Subreddits"
+                                    MouseArea {
+                                        anchors.fill: parent
+                                        onClicked: console.log("reload subreddit list")
+                                    }
+                                    Image {
+                                        source: "media/toolbar/reload.svg"
+                                        width: units.gu(2.2); height: width
+                                        anchors {
+                                            top: parent.top
+                                            topMargin: units.gu(0.7)
+                                            right: parent.right
+                                            rightMargin: units.gu(1)
+                                        }
+                                    }
+                                }
                             }
 
                             model: QRHelper.arrayToListModel(redditObj.getSubscribedArray())
