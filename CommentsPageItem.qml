@@ -145,10 +145,10 @@ Item {
         property bool loading: true
         property var activeCommentObj: []
 
-        function insertComment(commentObj) {
+        function insertComment(commentObj) {/*
             var component = Qt.createComponent("CommentItem.qml")
             var commentItem = component.createObject(commentsList, { commentObj: commentObj, level: 1 })
-            var spaceRect = Qt.createQmlObject("import QtQuick 2.0; Item{width: 1; height: units.gu(1.6)}", commentsList)
+            var spaceRect = Qt.createQmlObject("import QtQuick 2.0; Item{width: 1; height: units.gu(1.6)}", commentsList)*/
 
             activePostObj.data.num_comments += 1
             activePostObjChanged()
@@ -176,24 +176,28 @@ Item {
             id: commentsListModel
         }
 
-        delegate: Loader {
-            anchors {
-                left: parent.left
-                right: parent.right
-            }
-            source: {
-                if(kind === "t1") {
-                    return "CommentItem.qml"
-                } else if (kind === "more") {
-                    return "MoreItem.qml"
+        delegate: Component {
+            Loader {
+                anchors {
+                    left: parent.left
+                    right: parent.right
                 }
-            }
-            Component.onCompleted: {
-                item.level = level
-                if(kind === "t1") {
-                    item.commentObj = commentsList.activeCommentObj[index]
-                } else if (kind === "more") {
-                    item.moreObj = commentsList.activeCommentObj[index]
+                source: {
+                    if(kind === "t1") {
+                        return "CommentItem.qml"
+                    } else if (kind === "more") {
+                        return "MoreItem.qml"
+                    } else {
+                        return ""
+                    }
+                }
+                Component.onCompleted: {
+                    item.level = level
+                    if(kind === "t1") {
+                        item.commentObj = commentsList.activeCommentObj[index]
+                    } else if (kind === "more") {
+                        item.moreObj = commentsList.activeCommentObj[index]
+                    }
                 }
             }
         }

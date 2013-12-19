@@ -59,7 +59,7 @@ SwipeBox{
 
         property real internalPadding: units.gu(1)
 
-        anchors { left: parent.left; right: parent.right }
+        width: parent.width
         height: count > 0 ? contentHeight : 47; interactive: false
         spacing: units.gu(0.6)
 

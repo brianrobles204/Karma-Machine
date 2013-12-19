@@ -360,6 +360,25 @@ var ThingObj = function(reddit, thing) {
 
     BaseThing.apply(this, arguments);
 
+    var _setupOrigScores = (function(that) {
+
+        that.data.origUps = that.data.ups;
+        that.data.origDowns = that.data.downs;
+        if(that.data.hasOwnProperty('score')) {
+            that.data.origScore = that.data.score
+        } else {
+            that.data.origScore = that.data.score = that.data.ups - that.data.downs
+        }
+
+        if(that.data.likes === true) {
+            that.data.origUps -= 1
+            that.data.origScore -=  1
+        } else if (that.data.likes === false) {
+            that.data.origDowns -= 1
+            that.data.origScore += 1
+        }
+    }(this));
+
     this.toString = function() {
         return "[object ThingObject]"
     }
@@ -380,11 +399,21 @@ var ThingObj = function(reddit, thing) {
                                                 });
         var that = this;
         voteConnObj.onConnectionSuccess.connect(function(response){
+
             if(direction === 0) {
+                that.data.ups = that.data.origUps
+                that.data.downs = that.data.origDowns
+                that.data.score = that.data.origScore
                 that.data.likes = null
             } else if(direction === 1) {
+                that.data.ups = that.data.origUps + 1
+                that.data.downs = that.data.origDowns
+                that.data.score = that.data.origScore + 1
                 that.data.likes = true
             } else if(direction === -1) {
+                that.data.ups = that.data.origUps
+                that.data.downs = that.data.origDowns + 1
+                that.data.score = that.data.origScore - 1
                 that.data.likes = false
             }
 
