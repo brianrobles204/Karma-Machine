@@ -9,19 +9,15 @@ import "Utils/Misc.js" as MiscUtils
 import "QReddit/QReddit.js" as QReddit
 
 MainView {
+    id: window
     objectName: "mainView"
     applicationName: "com.ubuntu.developer.brianrobles204.karma-machine"
-    id: window
     automaticOrientation: true
     anchorToKeyboard: true
 
-    width: units.gu(45)
-    //width: units.gu(120)
-    height: units.gu(71)
-
+    width: units.gu(45); height: units.gu(71)
     backgroundColor: "#d9d9d9"
 
-    Layouts { id: dummyLayout; anchors.fill: parent;}
     property bool isPhone: dummyLayout.width <= units.gu(85)
     property string bigTitle: frontPageItem.title
     property string littleTitle: postPageItem.subTitle
@@ -48,6 +44,8 @@ MainView {
             pageStack.push(postPage)
         }
     }
+
+    Layouts { id: dummyLayout; anchors.fill: parent;}
 
     PageStack {
         id: pageStack
