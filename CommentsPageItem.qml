@@ -5,6 +5,7 @@ import Ubuntu.Components.Popups 0.1
 
 Item {
     property var postObj: activePostObj
+    property real beginningCommentsPos: descItem.height + spaceAndCommentInfo.height
 
     function reload() {
         commentsList.loadComments()
@@ -14,7 +15,7 @@ Item {
         commentsList.insertComment(commentObj)
     }
 
-    height: childrenRect.height + units.gu(0.4)
+    height: childrenRect.height
     anchors { left: parent.left; right: parent.right }
 
     DescItem {
@@ -145,12 +146,9 @@ Item {
         property bool loading: true
         property var activeCommentObj: []
 
-        function insertComment(commentObj) {/*
-            var component = Qt.createComponent("CommentItem.qml")
-            var commentItem = component.createObject(commentsList, { commentObj: commentObj, level: 1 })
-            var spaceRect = Qt.createQmlObject("import QtQuick 2.0; Item{width: 1; height: units.gu(1.6)}", commentsList)*/
-
-            activePostObj.data.num_comments += 1
+        function insertComment(commentObj) {
+            activeCommentObj.push(commentObj)
+            commentsListModel.insert(0, {kind: commentObj.kind, index: activeCommentObj.length - 1})
             activePostObjChanged()
         }
 
@@ -165,7 +163,7 @@ Item {
                 loading = false
                 for (var i = 0; i < commentsConnObj.response[1].length; i++) {
                     activeCommentObj.push(commentsConnObj.response[1][i])
-                    commentsListModel.append({kind: activeCommentObj[i].kind, level: 1, index: i})
+                    commentsListModel.append({kind: activeCommentObj[i].kind, index: i})
                 }
                 setPostTimer.postObj = commentsConnObj.response[0]
                 setPostTimer.restart()
@@ -192,7 +190,7 @@ Item {
                     }
                 }
                 Component.onCompleted: {
-                    item.level = level
+                    item.level = 1
                     if(kind === "t1") {
                         item.commentObj = commentsList.activeCommentObj[index]
                     } else if (kind === "more") {

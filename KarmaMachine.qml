@@ -293,7 +293,10 @@ MainView {
                                 text: "Comment"
                                 iconSource: "media/Comments.png"
                                 enabled: redditNotifier.isLoggedIn
-                                onTriggered: PopupUtils.open(commentComposerSheetComponent)
+                                onTriggered: {
+                                    postPageToolbarItems.opened = false
+                                    PopupUtils.open(commentComposerSheetComponent)
+                                }
                             }
                         }
                         ToolbarButton {

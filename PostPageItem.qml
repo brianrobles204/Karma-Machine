@@ -58,7 +58,8 @@ Item {
 
     function insertCommentObj(commentObj) {
         commentsPageItem.insertComment(commentObj)
-        commentsSection.contentY = commentsSection.contentHeight - commentsSection.height
+        postHeader.show()
+        commentsSection.contentY = commentsPageItem.beginningCommentsPos - units.gu(0.6)
     }
 
     Header {
@@ -299,24 +300,26 @@ Item {
 
     Flickable {
         id: commentsSection
-        width: parent.width
-        height: parent.height - postHeader.height
-        contentHeight: commentsPageItem.height
-        state: "normal"
-        z: 99
 
         property string title: "Comments"
 
-        CommentsPageItem {
-            id: commentsPageItem
+        function peek() {
+            state = "linkOpen"
+            commentsPeekItem.state = "peek"
+        }
+        function hide() {
+            state = "linkOpen"
+            commentsPeekItem.state = "hideBottom"
+        }
+        function show() {
+            state = "commentsOpen"
+            commentsPeekItem.state = "peek"
         }
 
-        Connections {
-            target: postPageItem
-            onPostObjChanged: {
-                commentsSection.contentY = 0
-            }
-        }
+        width: parent.width; height: parent.height - postHeader.height
+        contentHeight: commentsPageItem.height
+        state: "normal"
+        z: 99
 
         onDragEnded: {
             if(contentY < -units.gu(20) && webSection.canBeOpened) {
@@ -333,6 +336,19 @@ Item {
                 postHeader.show()
             } else {
                 postHeader.exception = false
+            }
+        }
+
+        Behavior on contentY { UbuntuNumberAnimation { duration: UbuntuAnimation.SlowDuration } }
+
+        CommentsPageItem {
+            id: commentsPageItem
+        }
+
+        Connections {
+            target: postPageItem
+            onPostObjChanged: {
+                commentsSection.contentY = 0
             }
         }
 
@@ -394,19 +410,6 @@ Item {
                 }
             }
         ]
-
-        function peek() {
-            state = "linkOpen"
-            commentsPeekItem.state = "peek"
-        }
-        function hide() {
-            state = "linkOpen"
-            commentsPeekItem.state = "hideBottom"
-        }
-        function show() {
-            state = "commentsOpen"
-            commentsPeekItem.state = "peek"
-        }
     }
 
     Column {
@@ -498,7 +501,7 @@ Item {
                 wrapMode: Text.WordWrap
                 horizontalAlignment: Text.AlignHCenter
                 clip: true
-                height: implicitHeight < maxHeight ? implicitHeight : maxHeight //parent.height - units.gu(3.6)
+                height: implicitHeight < maxHeight ? implicitHeight : maxHeight
                 text: postPageItem.postObj ? MiscUtils.simpleFixHtmlChars(postPageItem.postObj.data.title) : ""
                 font.weight: Font.DemiBold
                 color: UbuntuColors.coolGrey

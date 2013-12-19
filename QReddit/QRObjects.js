@@ -297,27 +297,6 @@ var SubredditObj = function (reddit, srName) {
 }
 
 
-/*function thingResponseToObject(reddit, response, parent){
-    //Converts Reddit "thing" responses into proper comments/replies
-
-    var comment = response.json.data.things[0]
-    //Reddit returns a "thing" object, but its interface differs from a normal comment/reply
-    //Here, we extend it so it behaves like normal.
-    comment.data.name = comment.data.id;
-    comment.data.body = comment.data.contentText;
-    comment.data.author = reddit.notifier.currentAuthUser;
-    comment.data.likes = true;
-    comment.data.created = comment.data.created_utc = Math.floor(Date.now() / 1000);
-    comment.data.score = comment.data.ups = 1;
-    comment.data.downs = 0;
-
-    if (parent.toString() === "[object CommentObject]" ||
-            parent.toString() === "[object PostObject]" ||
-            parent.toString() === "[object MoreObject]") {
-        return new CommentObj(reddit, comment);
-    } //TODO handle replies to message objects
-}*/
-
 var BaseThing = function(reddit, thing) {
 
     for (var key in thing) {
@@ -338,6 +317,7 @@ var BaseThing = function(reddit, thing) {
         var that = this;
         commentConnObj.onConnectionSuccess.connect(function(response){
             if(response.json.data) {
+                if(that.data.hasOwnProperty('num_comments')) that.data.num_comments += 1
                 if (that.toString() === "[object CommentObject]" || that.toString() === "[object PostObject]") {
                     commentConnObj.response = new CommentObj(reddit, response.json.data.things[0])
                 } //TODO handle replies to message objects
