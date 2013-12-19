@@ -152,6 +152,7 @@ SwipeBox{
                     item.commentObj = swipeBox.replyObjects[index]
                 } else if (kind === "more") {
                     item.moreObj = swipeBox.replyObjects[index]
+                    item.parent = swipeBox
                 }
             }
         }

@@ -54,6 +54,7 @@ Item {
 
     function reloadComments() {
         commentsPageItem.reload()
+        commentsSection.contentY = 0
     }
 
     function insertCommentObj(commentObj) {
@@ -343,13 +344,6 @@ Item {
 
         CommentsPageItem {
             id: commentsPageItem
-        }
-
-        Connections {
-            target: postPageItem
-            onPostObjChanged: {
-                commentsSection.contentY = 0
-            }
         }
 
         transitions: [

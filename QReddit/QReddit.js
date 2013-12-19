@@ -108,6 +108,7 @@ var QReddit = function(userAgent, applicationName) {
         that._loginUser = function(username, passwd, callback) {
             var loginConnObj;
             that.notifier.authStatus = 'loading';
+            that.notifier.subscribedLoading = true;
 
             if (username !== that.notifier.currentAuthUser && that.notifier.currentAuthUser !== "") {
                 //A different user is already logged in. We must log out first.
@@ -150,6 +151,7 @@ var QReddit = function(userAgent, applicationName) {
                 that.modhash = loginConnObj.response.modhash;
                 console.log("Log: Logged in \"" + username + "\" successfully.");
                 that.notifier.authStatus = 'done';
+                that.notifier.subscribedLoading = false;
                 that.notifier.currentAuthUser = username;
             });
             loginConnObj.onError.connect(function (response) {
@@ -243,6 +245,8 @@ var QReddit = function(userAgent, applicationName) {
                 subsrConnObj = that.getAPIConnection("subreddits_default");
             }
 
+            that.notifier.subscribedLoading = true
+
             subsrConnObj.onConnectionSuccess.connect(function(response){
                 var subsrArray = parseListing(response.data.children);
 
@@ -261,6 +265,7 @@ var QReddit = function(userAgent, applicationName) {
                 }
             });
             subsrConnObj.onSuccess.connect(function(){
+                that.notifier.subscribedLoading = false
                 var dbTransaction = getDatabaseTransaction('UPDATE RedditUsers SET subscribed=? WHERE username=?;',
                                                            [subsrConnObj.response, username]);
                 if (dbTransaction.rowsAffected > 0){
@@ -358,6 +363,7 @@ var QReddit = function(userAgent, applicationName) {
         var noLoginConnObj = createObject("ConnectionObject.qml");
         console.log("Log: No user is logged in.");
         this.notifier.authStatus = 'none';
+        that.notifier.subscribedLoading = false;
 
         var noLoginTimer = createTimer(1);
         noLoginTimer.onTriggered.connect(function() {
@@ -401,6 +407,7 @@ var QReddit = function(userAgent, applicationName) {
         //Passing true to logout() will stop the Connection object from changing the notifier's authStatus when successful.
         //* Reddit's logout api returns a 404, despite it working fine. Do not connect to onError as it is unreliable.
         this.notifier.authStatus = 'loading';
+        this.notifier.subscribedLoading = true;
 
         var logoutConnObj = this.getAPIConnection('logout');
         var that = this;
@@ -409,6 +416,7 @@ var QReddit = function(userAgent, applicationName) {
         });
         logoutConnObj.onSuccess.connect(function(){
             if(!loadingAuth) that.notifier.authStatus = 'none';
+            that.notifier.subscribedLoading = false;
             that.notifier.currentAuthUser = "";
             that._setActiveUser("");
         });

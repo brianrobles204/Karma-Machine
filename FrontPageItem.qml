@@ -259,11 +259,14 @@ Item {
 
                 Label {
                     id: subredditSwitcher
+
+                    property bool pressed:subMouseArea.pressed
+                    property ListModel model: !redditNotifier.subscribedLoading ? QRHelper.arrayToListModel(redditObj.getSubscribedArray()) : QRHelper.arrayToListModel([""])
+
                     text: postList.subreddit == "" ? "Frontpage" : postList.subreddit
                     anchors.left: parent.left
                     color: pressed ? UbuntuColors.orange : UbuntuColors.coolGrey
                     fontSize: "large"
-                    property bool pressed:subMouseArea.pressed
                 }
 
                 Image{
@@ -305,9 +308,14 @@ Item {
                         ListView {
                             id: subredditListView
 
+                            property real maxHeight: frontPageItem.height - (headerAddition.y + headerAddition.height + units.gu(5))
+                            property real realHeight: count > 0 ? contentHeight : 1
+
                             clip: true
                             width: parent.width
-                            height: frontPageItem.height - (headerAddition.y + headerAddition.height + units.gu(5))
+                            height: maxHeight > realHeight ? realHeight : maxHeight
+
+                            Behavior on height { UbuntuNumberAnimation{ duration: UbuntuAnimation.SnapDuration } }
 
                             Component.onCompleted: {
                                 var index = redditObj.getSubscribedArray().indexOf(postList.subreddit)
@@ -320,7 +328,7 @@ Item {
 
                             Timer {
                                 id: timer
-                                interval: 1
+                                interval: 100
                                 onTriggered: {
                                     subredditListView.contentY = -100
                                     subredditListView.returnToBounds()
@@ -330,6 +338,7 @@ Item {
                             header: Column {
                                 anchors { left: parent.left; right: parent.right }
                                 height: childrenRect.height;
+                                //TODO: fix icons
                                 Row {
                                     anchors.horizontalCenter: parent.horizontalCenter
                                     height: units.gu(8); width: childrenRect.width
@@ -357,7 +366,7 @@ Item {
                                         }
                                     }
                                     ToolbarButton {
-                                        property bool custom: redditObj.getSubscribedArray().indexOf(postList.subreddit) !== -1 || postList.subreddit === ""
+                                        property bool custom: redditObj.getSubscribedArray().indexOf(postList.subreddit) !== -1 || postList.subreddit === "" || postList.subreddit === "All"
 
                                         iconSource: "media/CommentsDark.png"
                                         text: custom ? "Custom…" : "<b>Custom…</b>"
@@ -378,13 +387,23 @@ Item {
                                 ListItems.ThinDivider {}
                                 ListItems.Header {
                                     text: "Subreddits"
+                                    enabled: !redditNotifier.subscribedLoading
                                     MouseArea {
-                                        anchors.fill: parent
-                                        onClicked: console.log("reload subreddit list")
+                                        enabled: parent.enabled
+                                        anchors{
+                                            top: parent.top
+                                            right: parent.right
+                                            bottom: parent.bottom
+                                        }
+                                        width: units.gu(6)
+                                        onClicked: {
+                                            var subsrConnObj = redditObj.updateSubscribedArray()
+                                        }
                                     }
                                     Image {
                                         source: "media/toolbar/reload.svg"
                                         width: units.gu(2.2); height: width
+                                        opacity: parent.enabled ? 1 : 0.5
                                         anchors {
                                             top: parent.top
                                             topMargin: units.gu(0.7)
@@ -393,12 +412,33 @@ Item {
                                         }
                                     }
                                 }
+                                Item {
+                                    anchors { left: parent.left; right: parent.right }
+                                    visible: redditNotifier.subscribedLoading
+                                    height: visible ? subsrActivityIndicator.height + subsrLabel.height + units.gu(3) : 1
+                                    ActivityIndicator {
+                                        id: subsrActivityIndicator
+                                        running: true
+                                        anchors { top: parent.top; topMargin: units.gu(1); horizontalCenter: parent.horizontalCenter }
+                                    }
+                                    Label {
+                                        id: subsrLabel
+                                        text: "Loading…"
+                                        anchors {
+                                            top: subsrActivityIndicator.bottom
+                                            topMargin: units.gu(1)
+                                            horizontalCenter: parent.horizontalCenter
+                                        }
+                                    }
+                                }
                             }
 
-                            model: QRHelper.arrayToListModel(redditObj.getSubscribedArray())
+                            model: subredditSwitcher.model
 
                             delegate: ListItems.Standard {
                                 text: model.name !== postList.subreddit ? model.name : "<b>" + model.name + "</b>"
+                                visible: model.name !== ""
+                                height: visible ? implicitHeight : 1
                                 onClicked: {
                                     PopupUtils.close(subredditPopover)
                                     postList.loadSubreddit(model.name)
@@ -412,10 +452,7 @@ Item {
                      id: customSubRDialogComponent
                      Dialog {
                          id: customSubRDialog
-                         title: "Enter a Custom Subreddit"
-                         //text: "Subreddit of the Day:"
 
-                         Component.onCompleted: customSubRTextField.forceActiveFocus()
                          function openSubreddit() {
                              var name = customSubRTextField.text
                              var lowerCaseName = name.toLowerCase()
@@ -423,6 +460,11 @@ Item {
                              postList.loadSubreddit(firstToUpName)
                              PopupUtils.close(customSubRDialog)
                          }
+
+                         title: "Enter a Custom Subreddit"
+                         //text: "Subreddit of the Day:"
+
+                         Component.onCompleted: customSubRTextField.forceActiveFocus()
 
                          TextField {
                              id: customSubRTextField
@@ -481,10 +523,12 @@ Item {
 
                     onClicked:  PopupUtils.open(sortingPopupComponent, sortingSwitcher)
                 }
+
                 Component {
                     id: sortingPopupComponent
                     Popover {
                         id: sortingPopover
+                        callerMargin: units.gu(1.4)
                         Column {
                             anchors {
                                 top: parent.top

@@ -5,8 +5,9 @@ Rectangle {
     id: rectangle
     property var moreObj
     property int level: 0
-    property real padding: units.gu(0.8)
+    property Item parent
 
+    property real padding: units.gu(0.8)
     property color primaryColor: "#f2f2f2"
     property color altColor: "#eaeaea"
 
@@ -48,7 +49,9 @@ Rectangle {
         onClicked: {
             var moreConnObj = rectangle.moreObj.getMoreComments()
             moreConnObj.onSuccess.connect(function(){
-                console.log(JSON.stringify(moreConnObj.response))
+                for (var i = 0; i < moreConnObj.response.length; i++) {
+                    parent.appendComment(moreConnObj.response[i])
+                }
             })
         }
     }

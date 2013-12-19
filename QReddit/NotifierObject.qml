@@ -7,4 +7,6 @@ QtObject {
 
     readonly property bool isLoggedIn: currentAuthUser !== ""
     property string authStatus //Status of user authentication. May be 'none', 'loading', 'done' or 'error'
+
+    property bool subscribedLoading
 }
