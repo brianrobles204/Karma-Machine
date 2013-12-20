@@ -164,21 +164,23 @@ var BaseReddit = function() {
         var method = 'POST';
         var paramStr = '';
 
-        if (!paramObj) paramObj = {};
-
-        if(GETPaths.indexOf(apiCommand) !== -1) {
-            redditURL = 'http://' + GetURL;
-        } else if(GETPaths.indexOf(apiCommand) === -1) {
-            redditURL = 'http://' + PostURL;
-        }
-
-        if(SSLPaths.indexOf(apiCommand) !== -1) {
-            redditURL = 'https://' + SecureURL;
-        }
-
         var apiCommandArray = apiCommand.split(' ');
         var apiBaseCommand = apiCommandArray[0];
         var apiUrl = API[apiBaseCommand];
+
+        if (!paramObj) paramObj = {};
+
+        if(GETPaths.indexOf(apiBaseCommand) !== -1) {
+            redditURL = 'http://' + GetURL;
+            method = 'GET';
+        } else if(GETPaths.indexOf(apiBaseCommand) === -1) {
+            redditURL = 'http://' + PostURL;
+        }
+
+        if(SSLPaths.indexOf(apiBaseCommand) !== -1) {
+            redditURL = 'https://' + SecureURL;
+        }
+
         var i = 1;
         apiUrl = apiUrl.replace(/\[(.*?)\]|(%s)/g, function(match, p1, p2) {
             if(i >= apiCommandArray.length) return "";
@@ -200,7 +202,6 @@ var BaseReddit = function() {
 
         if(GETPaths.indexOf(apiBaseCommand) !== -1) {
             redditURL += '.json';
-            method = 'GET';
         } else {
             paramObj['api_type'] = 'json'
         }
@@ -216,6 +217,29 @@ var BaseReddit = function() {
 
         return this._getConnection(method, redditURL);
     }
+}
+
+
+//Returns a translated array of our own extended objects from raw reddit js objects. Supports comments and more objects only.
+//reddit is the QReddit object
+//objects is an array of raw js objects from reddit
+//link is the id of the post link, for moreObjects
+function getTranslatedObjs(reddit, objects, link) {
+
+    var translatedObjs = [];
+    for(var i = 0; i < objects.length; i++) {
+
+        if (objects[i].kind === "t1") {
+            if(objects[i].data.replies !== "") {
+                objects[i].data.replies.data.children = getTranslatedObjs(reddit, objects[i].data.replies.data.children, link);
+            }
+            translatedObjs.push(new CommentObj(reddit, objects[i]));
+        } else if (objects[i].kind === "more") {
+            translatedObjs.push(new MoreObj(reddit, objects[i], link));
+        }
+    }
+
+    return translatedObjs;
 }
 
 
@@ -432,24 +456,6 @@ var PostObj = function(reddit, post) {
 
     ThingObj.apply(this, arguments);
 
-    this._getCommentObjs = function(comments) {
-
-        var commentObjs = [];
-        for(var i = 0; i < comments.length; i++) {
-
-            if (comments[i].kind === "t1") {
-                if(comments[i].data.replies !== "") {
-                    comments[i].data.replies.data.children = this._getCommentObjs(comments[i].data.replies.data.children);
-                }
-                commentObjs.push(new CommentObj(reddit, comments[i]));
-            } else if (comments[i].kind === "more") {
-                commentObjs.push(new MoreObj(reddit, comments[i], this.data.name));
-            }
-        }
-
-        return commentObjs;
-    }
-
     this.toString = function() {
         return "[object PostObject]"
     }
@@ -480,7 +486,7 @@ var PostObj = function(reddit, post) {
         commentsConnObj.onConnectionSuccess.connect(function(response){
             var commentsResponse = [];
             commentsResponse.push( new PostObj(reddit, response[0].data.children[0]) );
-            commentsResponse.push( that._getCommentObjs(response[1].data.children) );
+            commentsResponse.push( getTranslatedObjs(reddit, response[1].data.children, that.data.name) );
             commentsConnObj.response = commentsResponse;
             commentsConnObj.success();
         });
@@ -497,7 +503,7 @@ var PostObj = function(reddit, post) {
         var commentsConnObj = reddit.getAPIConnection(apiCommand, paramObj);
         var that = this;
         commentsConnObj.onConnectionSuccess.connect(function(response){
-            var commentObjs = that._getCommentObjs(response[1].data.children)
+            var commentObjs = getTranslatedObjs(reddit, response[1].data.children, that.data.name);
             commentsConnObj.response = commentObjs;
             commentsConnObj.success();
         });
@@ -537,8 +543,27 @@ var MoreObj = function(reddit, thing, link) {
         if (sort) paramObj.sort = sort;
 
         var moreConnObj = reddit.getAPIConnection('morechildren', paramObj);
+        var that = this;
         moreConnObj.onConnectionSuccess.connect(function(response){
-            moreConnObj.response = response.json.data.things;
+            //The returned response is flat. Here we turn it into a tree before translating.
+            var flatResponses = response.json.data.things;
+            var nodeList = {};
+
+            nodeList[that.data.parent_id] = { data: { 'id': that.data.parent_id, 'replies': { 'data': { 'children': [] } } } };
+            for(var i = 0; i < flatResponses.length; i++) {
+
+                if(flatResponses[i].data.name === "t1__") continue; //Bug with Reddit? There is an occassional empty "more" object
+
+                nodeList[flatResponses[i].data.name] = flatResponses[i];
+                if(nodeList[flatResponses[i].data.name].data.replies !== "") {
+                    nodeList[flatResponses[i].data.name].data.replies = { 'data': { 'children': [] } };
+                }
+
+                nodeList[flatResponses[i].data.parent_id].data.replies.data.children.push(nodeList[flatResponses[i].data.name]);
+            }
+            var treeResponses = nodeList[that.data.parent_id].data.replies.data.children
+
+            moreConnObj.response = getTranslatedObjs(reddit, treeResponses, that.link);
             moreConnObj.success();
         });
 

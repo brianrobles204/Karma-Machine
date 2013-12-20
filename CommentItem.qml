@@ -17,6 +17,11 @@ SwipeBox{
     readonly property bool isLevelOdd: ((level % 2) === 1)
     readonly property color backgroundColor: isLevelOdd ? primaryColor : altColor
 
+    function appendReply(replyObj) {
+        replyObjects.push(replyObj)
+        replyListModel.append({kind: replyObj.kind, index: replyObjects.length - 1})
+    }
+
     anchors {
         left: parent.left
         leftMargin: units.gu(1)
@@ -24,7 +29,7 @@ SwipeBox{
         rightMargin: level === 1 ? units.gu(1) : 0
     }
 
-    height: commentInfo.height + commentBody.height + commentListView.height + internalPadding * 2.5 + units.gu(0.6)
+    height: commentInfo.height + commentBody.height + replyListView.height + internalPadding * 2.5 + units.gu(0.6)
 
     onSwipedRight: {
         if(redditNotifier.isLoggedIn) {
@@ -48,14 +53,14 @@ SwipeBox{
     onReplyObjectsChanged: {
         replyListModel.clear()
         for (var i = 0; i < replyObjects.length; i++) {
-            replyListModel.append({kind: replyObjects[i].kind, level: level + 1, index: i})
+            replyListModel.append({kind: replyObjects[i].kind, index: i})
         }
-        if (replyObjects.length === 0) replyListModel.append({kind: "", level: level + 1, index: -1})
+        if (replyObjects.length === 0) replyListModel.append({kind: "", index: -1})
     }
 
     onContentXChanged: {
         //Disable the reply comments from being swiped as well
-        commentListView.x = contentX
+        replyListView.x = contentX
     }
 
     Rectangle {
@@ -115,7 +120,7 @@ SwipeBox{
     }
 
     ListView {
-        id: commentListView
+        id: replyListView
         //Note: All comments have at least one reply element, even if it has no actual replies.
         //This is to ensure that the header(which contains the actual comment) and the footer are instantiated properly
 
@@ -147,12 +152,16 @@ SwipeBox{
             }
             Component.onCompleted: {
                 if(index === -1) return
-                item.level = level
+                item.level = level + 1
                 if(kind === "t1") {
                     item.commentObj = swipeBox.replyObjects[index]
                 } else if (kind === "more") {
                     item.moreObj = swipeBox.replyObjects[index]
-                    item.parent = swipeBox
+                    item.index = index
+                    item.parentComment = swipeBox
+                    item.onDestroyItem.connect(function(indexNo){
+                        replyListModel.remove(indexNo)
+                    })
                 }
             }
         }
