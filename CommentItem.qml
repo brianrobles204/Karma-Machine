@@ -11,11 +11,18 @@ SwipeBox{
     property string vote: commentObj ? commentObj.data.likes === true ? "up" : commentObj.data.likes === false ? "down" : "" : ""
 
     property real internalPadding: units.gu(1)
+    property real bottomPadding: isMinimizeable ? units.gu(0.6) : 0
     property color primaryColor: "#f2f2f2"
     property color altColor: "#eaeaea"
 
     readonly property bool isLevelOdd: ((level % 2) === 1)
     readonly property color backgroundColor: isLevelOdd ? primaryColor : altColor
+
+    property bool isMinimizeable: replyObjects.length > 0
+    property bool isMinimized: false
+
+    signal minimize()
+    signal maximize()
 
     function appendReply(replyObj) {
         replyObjects.push(replyObj)
@@ -29,7 +36,7 @@ SwipeBox{
         rightMargin: level === 1 ? units.gu(1) : 0
     }
 
-    height: commentInfo.height + commentBody.height + replyListView.height + internalPadding * 2.5 + units.gu(0.6)
+    height: commentInfo.height + commentFlair.boxHeight + commentBody.height + replyListView.height + minimizeRect.height + internalPadding * 1.5 + bottomPadding
 
     onSwipedRight: {
         if(redditNotifier.isLoggedIn) {
@@ -49,18 +56,48 @@ SwipeBox{
             })
         }
     }
+    onClicked: {
+        if(!isMinimizeable) return
+        if(isMinimized) {
+            maximize()
+        } else {
+            minimize()
+        }
+    }
+
+    onMinimize: {
+        heightBehavior.enabled = true
+        isMinimized = true
+        enableBehaviorTimer.restart()
+    }
+    onMaximize: {
+        heightBehavior.enabled = true
+        isMinimized = false
+        enableBehaviorTimer.restart()
+    }
 
     onReplyObjectsChanged: {
         replyListModel.clear()
         for (var i = 0; i < replyObjects.length; i++) {
             replyListModel.append({kind: replyObjects[i].kind, index: i})
         }
-        if (replyObjects.length === 0) replyListModel.append({kind: "", index: -1})
     }
 
     onContentXChanged: {
         //Disable the reply comments from being swiped as well
         replyListView.x = contentX
+    }
+
+    Timer {
+        id: enableBehaviorTimer
+        interval: UbuntuAnimation.BriskDuration
+        onTriggered: heightBehavior.enabled = false
+    }
+
+    Behavior on height {
+        id: heightBehavior
+        enabled: false
+        UbuntuNumberAnimation { duration: UbuntuAnimation.BriskDuration }
     }
 
     Rectangle {
@@ -87,7 +124,27 @@ SwipeBox{
             var score = commentObj ? (commentObj.data.ups - commentObj.data.downs) : 0
             var timeRaw = commentObj ? commentObj.data.created_utc : new Date()
             var time = MiscUtils.timeSince(new Date(timeRaw * 1000))
-            return "<b>" + author + "</b> <b>·</b> " + score + " points <b>·</b> " + time
+
+            var infoText = "<b>"
+            if (commentObj && commentObj.data.distinguished === "admin"){
+                infoText += "<font color='#DF4D4D'>" + author + " [a]</font>"
+            } else if (commentObj && commentObj.data.distinguished === "moderator"){
+                infoText += "<font color='#6EAF6E'>" + author + " [m]</font>"
+            } else if(activePostObj && author === activePostObj.data.author) {
+                infoText += "<font color='#6E8CAF'>" + author + " [s]</font>"
+            } else {
+                infoText += author
+            }
+
+            infoText += "</b> <b>·</b> "
+            if(commentObj && commentObj.data.score_hidden) {
+                infoText += "[score hidden]"
+            } else {
+                infoText += score + " points"
+            }
+
+            infoText += " <b>·</b> " + time
+            return infoText
         }
         anchors {
             top: parent.top
@@ -98,7 +155,27 @@ SwipeBox{
             rightMargin: swipeBox.internalPadding
         }
         fontSize: "x-small"
+        elide: Text.ElideRight
         color: "#999999"
+    }
+
+    Label {
+        id: commentFlair
+        property real boxHeight: visible ? height + anchors.topMargin : 0
+        text: visible ? commentObj.data.author_flair_text : ""
+        anchors {
+            top: commentInfo.bottom
+            topMargin: visible ? swipeBox.internalPadding * 0.4 : 0
+            left: parent.left
+            leftMargin: swipeBox.internalPadding
+            right: parent.right
+            rightMargin: swipeBox.internalPadding
+        }
+        fontSize: "x-small"
+        elide: Text.ElideRight
+        color: "#999999"
+        visible: commentObj && typeof commentObj.data.author_flair_text === "string" && commentObj.data.author_flair_text !== ""
+        height: visible ? implicitHeight + swipeBox.internalPadding / 2 : 0
     }
 
     Label {
@@ -106,13 +183,14 @@ SwipeBox{
         text: commentObj ? MiscUtils.getHtmlText(commentObj.data.body, bgRect.color) : ""
         textFormat: Text.RichText
         anchors {
-            top: commentInfo.bottom
+            top: commentFlair.bottom
             topMargin: swipeBox.internalPadding/2
             left: parent.left
             leftMargin: swipeBox.internalPadding
             right: parent.right
             rightMargin: swipeBox.internalPadding
         }
+        height: implicitHeight + swipeBox.internalPadding
         wrapMode: Text.Wrap
         fontSize: "small"
         color: UbuntuColors.coolGrey
@@ -121,16 +199,16 @@ SwipeBox{
 
     ListView {
         id: replyListView
-        //Note: All comments have at least one reply element, even if it has no actual replies.
-        //This is to ensure that the header(which contains the actual comment) and the footer are instantiated properly
 
-        anchors {
-            top: commentBody.bottom;
-            topMargin: swipeBox.internalPadding
-        }
+        property bool isMinimized: swipeBox.isMinimized
+        property real defaultHeight: !isMinimized && (count > 0) ? contentHeight : 0
+
+        anchors.top: commentBody.bottom
         width: parent.width
-        height: count > 0 ? contentHeight : 0; interactive: false
+        height: defaultHeight; interactive: false
         spacing: units.gu(0.6)
+        opacity: !isMinimized ? 1 : 0
+        visible: opacity !== 0
 
         model: ListModel {
             id: replyListModel
@@ -151,18 +229,53 @@ SwipeBox{
                 }
             }
             Component.onCompleted: {
-                if(index === -1) return
                 item.level = level + 1
                 if(kind === "t1") {
                     item.commentObj = swipeBox.replyObjects[index]
                 } else if (kind === "more") {
                     item.moreObj = swipeBox.replyObjects[index]
-                    item.index = index
                     item.parentComment = swipeBox
-                    item.onDestroyItem.connect(function(indexNo){
-                        replyListModel.remove(indexNo)
+                    item.onDestroyItem.connect(function(){
+                        replyListModel.remove(replyListModel.count - 1)
                     })
                 }
+            }
+        }
+
+        Behavior on opacity { UbuntuNumberAnimation { duration: UbuntuAnimation.BriskDuration } }
+    }
+
+    Rectangle {
+        id: minimizeRect
+
+        property real padding: units.gu(0.8)
+        property real defaultHeight: swipeBox.isMinimized ? minimizeLabel.height + 2*padding : 0
+
+        anchors {
+            top: replyListView.bottom
+            left: parent.left
+            leftMargin: swipeBox.internalPadding
+            right: parent.right
+        }
+        height: defaultHeight
+        color: !isLevelOdd ? primaryColor : altColor
+        radius: units.gu(0.6)
+        opacity: swipeBox.isMinimized ? 1 : 0
+        visible: opacity !== 0
+
+        Behavior on opacity { UbuntuNumberAnimation { duration: UbuntuAnimation.BriskDuration } }
+
+        Label {
+            id: minimizeLabel
+            text: "hidden"
+            fontSize: "x-small"
+            font.weight: Font.Bold
+            color: "#999999"
+            anchors {
+                top: parent.top
+                topMargin: minimizeRect.padding
+                left: parent.left
+                leftMargin: minimizeRect.padding
             }
         }
     }

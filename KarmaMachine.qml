@@ -262,6 +262,7 @@ MainView {
                         var commentConnObj = postPageItem.postObj.comment(commentTextArea.text)
                         commentConnObj.onSuccess.connect(function() {
                             postPage.insertCommentObj(commentConnObj.response)
+                            activePostObjChanged()
                         })
                         PopupUtils.close(commentComposerSheet)
                     }

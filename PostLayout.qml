@@ -11,7 +11,6 @@ Item {
 
     property color primaryColor: "#f2f2f2"
     property color selectedColor: "#ffeaae"
-    property color stickiedColor: "#feffae"
 
     signal commentsTriggered
 
@@ -24,7 +23,7 @@ Item {
     Rectangle{
         anchors.fill: parent
         z: -1
-        color: !postRow.selected ? !postRow.stickied ? primaryColor : stickiedColor : selectedColor
+        color: !postRow.selected ? primaryColor : selectedColor
     }
 
     UbuntuShape {
@@ -71,7 +70,7 @@ Item {
             wrapMode: Text.Wrap
             horizontalAlignment: Text.AlignLeft
             font.weight: Font.DemiBold
-            color: UbuntuColors.coolGrey
+            color: !postRow.stickied ? UbuntuColors.coolGrey : "#2D692D"
         }
 
         Row {
@@ -92,6 +91,12 @@ Item {
                 id: postMiniInfo
                 text: {
                     var author = postObj ? postObj.data.author : "author"
+                    if (postObj && postObj.data.distinguished === "admin"){
+                        author = "<font color='#DF4D4D'>" + author + " [a]</font>"
+                    } else if (postObj && postObj.data.distinguished === "moderator"){
+                        author = "<font color='#6EAF6E'>" + author + " [m]</font>"
+                    }
+
                     var subreddit = postObj ? postObj.data.subreddit : "reddit"
 
                     var timeRaw = postObj ? postObj.data.created_utc : 0

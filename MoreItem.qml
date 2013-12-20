@@ -5,7 +5,6 @@ Rectangle {
     id: rectangle
     property var moreObj
     property int level: 0
-    property int index: 0
     property Item parentComment
     property bool enabled: true
 
@@ -15,7 +14,7 @@ Rectangle {
 
     readonly property bool isLevelOdd: ((level % 2) === 1)
 
-    signal destroyItem(int indexNo)
+    signal destroyItem()
 
     anchors {
         left: parent.left
@@ -32,11 +31,11 @@ Rectangle {
         id: label
         text: moreObj ?
                   moreObj.data.count > 1 ?
-                      moreObj.data.count.toLocaleString() + " More Comments…"
+                      moreObj.data.count.toLocaleString() + " More comments…"
                     :
-                      "One More Comment…"
+                      "One more comment…"
               :
-                "More Comments…"
+                "More comments…"
         fontSize: "x-small"
         font.weight: Font.Bold
         color: "#999999"
@@ -57,7 +56,7 @@ Rectangle {
             top: parent.top
             topMargin: rectangle.padding
             left: label.right
-            leftMargin: rectangle.padding
+            leftMargin: rectangle.padding * 2
         }
         running: visible
     }
@@ -69,10 +68,10 @@ Rectangle {
             rectangle.enabled = false
             var moreConnObj = rectangle.moreObj.getMoreComments()
             moreConnObj.onSuccess.connect(function(){
+                rectangle.destroyItem()
                 for (var i = 0; i < moreConnObj.response.length; i++) {
                     rectangle.parentComment.appendReply(moreConnObj.response[i])
                 }
-                rectangle.destroyItem(rectangle.index)
             })
         }
     }

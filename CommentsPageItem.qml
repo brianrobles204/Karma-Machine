@@ -15,7 +15,7 @@ Column {
         commentsRepeater.insertComment(commentObj)
     }
 
-    height: childrenRect.height
+    height: childrenRect.height + units.gu(2.5)
     anchors { left: parent.left; right: parent.right }
     spacing: units.gu(1.5)
 
@@ -127,7 +127,6 @@ Column {
         function insertComment(commentObj) {
             activeCommentObj.push(commentObj)
             commentsListModel.insert(0, {kind: commentObj.kind, index: activeCommentObj.length - 1})
-            activePostObjChanged()
         }
 
         function loadComments() {
@@ -146,6 +145,11 @@ Column {
                 setPostTimer.postObj = commentsConnObj.response[0]
                 setPostTimer.restart()
             });
+        }
+
+        function appendReply(replyObj) {
+            activeCommentObj.push(replyObj)
+            commentsListModel.append({kind: replyObj.kind, index: activeCommentObj.length - 1})
         }
 
         model: ListModel {
@@ -174,6 +178,10 @@ Column {
                     item.commentObj = commentsRepeater.activeCommentObj[index]
                 } else if (kind === "more") {
                     item.moreObj = commentsRepeater.activeCommentObj[index]
+                    item.parentComment = commentsRepeater
+                    item.onDestroyItem.connect(function(){
+                        commentsListModel.remove(commentsListModel.count - 1)
+                    })
                 }
             }
         }
@@ -198,7 +206,8 @@ Column {
             horizontalCenter: parent.horizontalCenter
         }
         width: units.gu(3.5)
-        height: units.gu(3.5)
+        height: visible ? units.gu(3.5) : 1
         running: commentsRepeater.loading
+        visible: running
     }
 }
