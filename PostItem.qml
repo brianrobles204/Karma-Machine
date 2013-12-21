@@ -71,23 +71,6 @@ SwipeBox{
         }
     }
 
-    Rectangle {
-        property real size: units.gu(1)
-        property string vote: swipeBox.vote
-        anchors {
-            top: parent.top
-            right: parent.right
-            topMargin: units.gu(1)
-            rightMargin: units.gu(1)
-        }
-        width: size
-        height: size
-        radius: size/2
-        color: vote == "up" ? "#FF8B60" : "#9494FF"
-        visible: vote == "up" || vote == "down"
-        z: 100
-    }
-
     Item{
         id: headerAdditionHolder
         anchors {
@@ -102,6 +85,8 @@ SwipeBox{
         id: postBox
         anchors.top: headerAdditionHolder.bottom
         selected: swipeBox.selected
+        postObj: swipeBox.postObj
+        vote: swipeBox.vote
 
         onCommentsTriggered: swipeBox.commentsTriggered()
     }

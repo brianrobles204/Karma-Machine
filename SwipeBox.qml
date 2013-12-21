@@ -34,16 +34,13 @@ Flickable {
         isPressed = false
     }
 
-    Component.onCompleted: {
-        mouseArea.clicked.connect(clicked)
-    }
-
     MouseArea {
         id: mouseArea
         anchors.fill: parent
         onPressed: swipeBox.interactive = true
         onReleased: swipeBox.interactive = false
         onCanceled: if(!swipeBox.isPressed) swipeBox.interactive = false
+        onClicked: swipeBox.clicked()
     }
 }
 

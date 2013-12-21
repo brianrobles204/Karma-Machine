@@ -19,9 +19,13 @@ SwipeBox{
     readonly property color backgroundColor: isLevelOdd ? primaryColor : altColor
     readonly property int replyNo: {
         var number = 0
-        for (var i = 0; i < replyObjects.length; i++) {
-            number += replyObjects[i].data._replyNo
-            if(replyObjects[i].kind === "t1") number += 1
+        var replyList = replyColumn.children
+        for (var i = 0; i < replyList.length; i++) {
+            var replyItem = replyList[i].item
+            if (replyItem) {
+                number += replyItem.replyNo
+                if(replyItem.commentObj) number += 1
+            }
         }
         return number
     }
@@ -44,7 +48,7 @@ SwipeBox{
         rightMargin: level === 1 ? units.gu(1) : 0
     }
 
-    height: commentInfo.height + commentFlair.boxHeight + commentBody.height + replyListView.height + minimizeRect.height + internalPadding * 1.5 + bottomPadding
+    height: commentInfo.height + commentFlair.boxHeight + commentBody.height + replyColumn.height + minimizeRect.height + internalPadding * 1.5 + bottomPadding
 
     onSwipedRight: {
         if(redditNotifier.isLoggedIn) {
@@ -93,7 +97,7 @@ SwipeBox{
 
     onContentXChanged: {
         //Disable the reply comments from being swiped as well
-        replyListView.x = contentX
+        replyColumn.x = contentX
     }
 
     Timer {
@@ -175,15 +179,15 @@ SwipeBox{
             top: commentInfo.bottom
             topMargin: visible ? swipeBox.internalPadding * 0.4 : 0
             left: parent.left
-            leftMargin: swipeBox.internalPadding
+            leftMargin: swipeBox.internalPadding * 1.4
             right: parent.right
             rightMargin: swipeBox.internalPadding
         }
         fontSize: "x-small"
         elide: Text.ElideRight
-        color: "#999999"
+        color: "#a5a5a5"
         visible: commentObj && typeof commentObj.data.author_flair_text === "string" && commentObj.data.author_flair_text !== ""
-        height: visible ? implicitHeight + swipeBox.internalPadding / 2 : 0
+        height: visible ? implicitHeight + swipeBox.internalPadding * 0.4 : 0
     }
 
     Label {
@@ -205,52 +209,59 @@ SwipeBox{
         onLinkActivated: openPostContent(link)
     }
 
-    ListView {
-        id: replyListView
+    Column {
+        id: replyColumn
 
         property bool isMinimized: swipeBox.isMinimized
-        property real defaultHeight: !isMinimized && (count > 0) ? contentHeight : 0
+        property real defaultHeight: !isMinimized ? implicitHeight : 0
 
-        anchors.top: commentBody.bottom
+        anchors {
+            top: commentBody.bottom
+            left: parent.left
+            right: parent.right
+        }
         width: parent.width
-        height: defaultHeight; interactive: false
+        height: defaultHeight;
         spacing: units.gu(0.6)
         opacity: !isMinimized ? 1 : 0
         visible: opacity !== 0
 
-        model: ListModel {
-            id: replyListModel
-        }
-
-        delegate: Loader {
-            anchors {
-                left: parent.left
-                right: parent.right
-            }
-            source: {
-                if(kind === "t1") {
-                    return "CommentItem.qml"
-                } else if (kind === "more") {
-                    return "MoreItem.qml"
-                } else {
-                    return ""
-                }
-            }
-            Component.onCompleted: {
-                item.level = level + 1
-                if(kind === "t1") {
-                    item.commentObj = swipeBox.replyObjects[index]
-                } else if (kind === "more") {
-                    item.moreObj = swipeBox.replyObjects[index]
-                    item.parentComment = swipeBox
-                    item.onDestroyItem.connect(function(){
-                        replyListModel.remove(replyListModel.count - 1)
-                    })
-                }
-            }
-        }
-
         Behavior on opacity { UbuntuNumberAnimation { duration: UbuntuAnimation.BriskDuration } }
+
+        Repeater {
+            id: replyRepeater
+            model: ListModel {
+                id: replyListModel
+            }
+
+            delegate: Loader {
+                anchors {
+                    left: parent.left
+                    right: parent.right
+                }
+                source: {
+                    if(kind === "t1") {
+                        return "CommentItem.qml"
+                    } else if (kind === "more") {
+                        return "MoreItem.qml"
+                    } else {
+                        return ""
+                    }
+                }
+                Component.onCompleted: {
+                    item.level = level + 1
+                    if(kind === "t1") {
+                        item.commentObj = swipeBox.replyObjects[index]
+                    } else if (kind === "more") {
+                        item.moreObj = swipeBox.replyObjects[index]
+                        item.parentComment = swipeBox
+                        item.onDestroyItem.connect(function(){
+                            replyListModel.remove(replyListModel.count - 1)
+                        })
+                    }
+                }
+            }
+        }
     }
 
     Rectangle {
@@ -260,7 +271,7 @@ SwipeBox{
         property real defaultHeight: swipeBox.isMinimized ? minimizeLabel.height + 2*padding : 0
 
         anchors {
-            top: replyListView.bottom
+            top: replyColumn.bottom
             left: parent.left
             leftMargin: swipeBox.internalPadding
             right: parent.right

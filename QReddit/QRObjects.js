@@ -231,18 +231,11 @@ function getTranslatedObjs(reddit, objects, link) {
     for(var i = 0; i < objects.length; i++) {
 
         if (objects[i].kind === "t1") {
-            objects[i].data._replyNo = 0
             if(objects[i].data.replies !== "") {
-                var replyObjs = [];
-                objects[i].data.replies.data.children = replyObjs = getTranslatedObjs(reddit, objects[i].data.replies.data.children, link);
-                for (var k = 0; k  < replyObjs.length; k++) {
-                    objects[i].data._replyNo += replyObjs[k].data._replyNo;
-                    if(replyObjs[k].kind === "t1") objects[i].data._replyNo += 1;
-                }
+                objects[i].data.replies.data.children = getTranslatedObjs(reddit, objects[i].data.replies.data.children, link);
             }
             translatedObjs.push(new CommentObj(reddit, objects[i]));
         } else if (objects[i].kind === "more") {
-            objects[i].data._replyNo = objects[i].data.count;
             translatedObjs.push(new MoreObj(reddit, objects[i], link));
         }
     }

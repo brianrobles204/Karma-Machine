@@ -5,6 +5,8 @@ import "Utils/Misc.js" as MiscUtils
 Item {
     id: postRow
 
+    property var postObj
+    property string vote
     property real spacingConstant: units.gu(1.25)
     property bool selected
     readonly property bool stickied: postObj ? postObj.data.stickied : false
@@ -24,6 +26,23 @@ Item {
         anchors.fill: parent
         z: -1
         color: !postRow.selected ? primaryColor : selectedColor
+    }
+
+    Rectangle {
+        property real size: units.gu(1)
+        property string vote: postRow.vote
+        anchors {
+            top: parent.top
+            right: parent.right
+            topMargin: units.gu(1)
+            rightMargin: units.gu(1)
+        }
+        width: size
+        height: size
+        radius: size/2
+        color: vote == "up" ? "#FF8B60" : "#9494FF"
+        visible: vote == "up" || vote == "down"
+        z: 100
     }
 
     UbuntuShape {

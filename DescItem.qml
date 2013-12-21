@@ -52,6 +52,8 @@ SwipeBox{
 
     PostLayout {
         id: descHeader
+        postObj: swipeBox.postObj
+        vote: swipeBox.vote
     }
     Rectangle {
         id: divider
