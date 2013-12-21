@@ -13,6 +13,7 @@ Rectangle {
     property color altColor: "#eaeaea"
 
     readonly property bool isLevelOdd: ((level % 2) === 1)
+    readonly property int replyNo: moreObj ? moreObj.data.count : 0
 
     signal destroyItem()
 

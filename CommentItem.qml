@@ -17,6 +17,14 @@ SwipeBox{
 
     readonly property bool isLevelOdd: ((level % 2) === 1)
     readonly property color backgroundColor: isLevelOdd ? primaryColor : altColor
+    readonly property int replyNo: {
+        var number = 0
+        for (var i = 0; i < replyObjects.length; i++) {
+            number += replyObjects[i].data._replyNo
+            if(replyObjects[i].kind === "t1") number += 1
+        }
+        return number
+    }
 
     property bool isMinimizeable: replyObjects.length > 0
     property bool isMinimized: false
@@ -267,7 +275,7 @@ SwipeBox{
 
         Label {
             id: minimizeLabel
-            text: "hidden"
+            text: swipeBox.replyNo !== 1 ? swipeBox.replyNo + " Hidden" : "One hidden"
             fontSize: "x-small"
             font.weight: Font.Bold
             color: "#999999"

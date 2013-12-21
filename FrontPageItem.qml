@@ -455,9 +455,23 @@ Item {
 
                          function openSubreddit() {
                              var name = customSubRTextField.text
-                             var lowerCaseName = name.toLowerCase()
-                             var firstToUpName = lowerCaseName.substr(0, 1).toUpperCase() + lowerCaseName.substr(1)
-                             postList.loadSubreddit(firstToUpName)
+                             var index = -1
+                             var subsrArray = redditObj.getSubscribedArray()
+                             for(var i = 0; i < subsrArray.length; i++) {
+                                 if(subsrArray[i].toLowerCase() === name.toLowerCase()) {
+                                     index = i
+                                     break
+                                 }
+                             }
+
+                             if(index !== -1) {
+                                 postList.loadSubreddit(subsrArray[i])
+                             } else {
+                                 var lowerCaseName = name.toLowerCase()
+                                 var firstToUpName = lowerCaseName.substr(0, 1).toUpperCase() + lowerCaseName.substr(1)
+                                 postList.loadSubreddit(firstToUpName)
+                             }
+
                              PopupUtils.close(customSubRDialog)
                          }
 
