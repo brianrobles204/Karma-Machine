@@ -11,7 +11,10 @@ Flickable {
     signal swipedRight
     signal clicked
 
-    width: parent.width
+    anchors {
+        left: parent.left
+        right: parent.right
+    }
     interactive: false
     flickableDirection: Flickable.HorizontalFlick
 

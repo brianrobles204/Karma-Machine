@@ -79,7 +79,7 @@ MouseArea {
                     verticalCenterOffset: units.gu(0.2)
                 }
                 visible: canBeToggled
-                source: "media/icon_close_preview.png"
+                source: "media/ui/header_toggle.png"
                 rotation: headerRect.linkState ? 180 : 0
                 Behavior on rotation {UbuntuNumberAnimation{}}
             }

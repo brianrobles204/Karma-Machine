@@ -11,8 +11,11 @@ SwipeBox{
 
     signal commentsTriggered
 
-    height: headerAdditionHolder.height + postBox.height + divider.height
-    width: parent.width
+    anchors {
+        left: parent.left
+        right: parent.right
+    }
+    height: headerAdditionHolder.height + postBox.height + units.dp(1)
 
     onClicked: {
         window.resetPostObj()
@@ -74,6 +77,7 @@ SwipeBox{
     Item{
         id: headerAdditionHolder
         anchors {
+            top: parent.top
             left: parent.left
             right: parent.right
         }
@@ -89,16 +93,6 @@ SwipeBox{
         vote: swipeBox.vote
 
         onCommentsTriggered: swipeBox.commentsTriggered()
-    }
-
-    Item {
-        id: divider
-        anchors {
-            top: postBox.bottom
-            left: parent.left
-            right: parent.right
-        }
-        height: units.gu(0.1)
     }
 
     function giveSpace() {

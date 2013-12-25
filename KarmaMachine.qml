@@ -152,7 +152,7 @@ MainView {
                 z: 100
             }
             Image {
-                source: "media/separatorShadow.png"
+                source: "media/ui/main_shadow.png"
                 width: units.gu(80)
                 height: units.gu(3)
                 rotation: 270
@@ -216,7 +216,7 @@ MainView {
                             action: Action {
                                 id: refreshAction
                                 text: "Refresh"
-                                iconSource: "media/toolbar/reload.svg"
+                                iconSource: "media/tool-actions/refresh.svg"
                                 onTriggered: {
                                     frontPageItem.reloadPage()
                                     frontPageToolbarItems.opened = false
@@ -292,7 +292,7 @@ MainView {
                         ToolbarButton {
                             action: Action {
                                 text: "Comment"
-                                iconSource: "media/Comments.png"
+                                iconSource: "media/ui/comments.svg"
                                 enabled: redditNotifier.isLoggedIn
                                 onTriggered: {
                                     postPageToolbarItems.opened = false
@@ -302,8 +302,8 @@ MainView {
                         }
                         ToolbarButton {
                             action: Action {
-                                property string voteImage: "media/toolbar/up-vote.png"
-                                property string emptyImage: "media/toolbar/up-empty.png"
+                                property string voteImage: "media/tool-actions/up-vote.png"
+                                property string emptyImage: "media/tool-actions/up-empty.png"
                                 text: "Upvote"
                                 iconSource: activePostObj ? activePostObj.data.likes === true ? voteImage : emptyImage : emptyImage
                                 enabled: redditNotifier.isLoggedIn
@@ -318,8 +318,8 @@ MainView {
                         }
                         ToolbarButton {
                             action: Action {
-                                property string voteImage: "media/toolbar/down-vote.png"
-                                property string emptyImage: "media/toolbar/down-empty.png"
+                                property string voteImage: "media/tool-actions/down-vote.png"
+                                property string emptyImage: "media/tool-actions/down-empty.png"
                                 text: "Downvote"
                                 iconSource: activePostObj ? activePostObj.data.likes === false ? voteImage : emptyImage : emptyImage
                                 enabled: redditNotifier.isLoggedIn
@@ -335,7 +335,7 @@ MainView {
                         ToolbarButton {
                             action: Action {
                                 text: (linkOpen && postPageItem.__webSection.loading) ? "Cancel" : "Refresh"
-                                iconSource: (linkOpen && postPageItem.__webSection.loading) ? "media/toolbar/cancel.png" : "media/toolbar/reload.svg"
+                                iconSource: (linkOpen && postPageItem.__webSection.loading) ? "media/tool-actions/cancel.png" : "media/tool-actions/refresh.svg"
                                 onTriggered: {
                                     var web = postPageItem.__webSection
                                     if(linkOpen){
@@ -353,7 +353,7 @@ MainView {
                         ToolbarButton {
                             action: Action {
                                 text: "Previous"
-                                iconSource: "media/toolbar/go-previous.png"
+                                iconSource: "media/tool-actions/go-previous.png"
                                 enabled:  postPageItem.__webSection.canGoBack
                                 onTriggered: postPageItem.__webSection.goBack()
                             }
@@ -364,7 +364,7 @@ MainView {
                         ToolbarButton {
                             action: Action {
                                 text: "External"
-                                iconSource: "media/toolbar/text-html-symbolic.svg"
+                                iconSource: "media/tool-actions/text-html-symbolic.svg"
                                 onTriggered: {
                                     Qt.openUrlExternally(linkOpen ? postPageItem.webUrl : postPageItem.commentsUrl)
                                 }
@@ -470,7 +470,6 @@ MainView {
         var component = Qt.createComponent("HeaderArea.qml")
         var header = component.createObject(pageStack.header)
         pageStack.header.__styleInstance.textColor = "#fafafa"
-        pageStack.header.__styleInstance.separatorSource = "media/PageHeaderBaseDividerLight.sci"
     }
 
 }

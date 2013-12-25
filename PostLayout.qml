@@ -1,4 +1,5 @@
 import QtQuick 2.0
+import QtGraphicalEffects 1.0
 import Ubuntu.Components 0.1
 import "Utils/Misc.js" as MiscUtils
 
@@ -57,13 +58,7 @@ Item {
         width: visible ? units.gu(6) : 0
         height: units.gu(6)
         image: Image {
-            source: {
-                var image = postObj ? postObj.data.thumbnail: "media/self.png"
-                if(image == "self") return "media/self.png"
-                if(image == "default") return "media/default.png"
-                if(image == "nsfw") return "media/nsfw.png"
-                return image
-            }
+            source: postObj && postObj.data.thumbnail !== "self" && postObj.data.thumbnail !== "default" ? postObj.data.thumbnail : ""
             fillMode: Image.PreserveAspectCrop
         }
         visible: postObj ? (postObj.data.thumbnail !== "self" && postObj.data.thumbnail !== "default" && postObj.data.thumbnail !== "") : false
@@ -160,14 +155,20 @@ Item {
         }
 
         Image {
-            source: "media/CommentsBubble.png"
-            width: units.gu(3.125)
-            height: units.gu(3.125)
+            id: commentIcon
+            source: "media/ui/comments@30.svg"
+            width: units.gu(3.125); height: units.gu(3.125)
             anchors {
                 verticalCenter: parent.verticalCenter
                 horizontalCenter: parent.horizontalCenter
                 horizontalCenterOffset: units.gu(1)
             }
+            sourceSize { width: width; height: height }
+        }
+        ColorOverlay {
+            anchors.fill: commentIcon
+            source: commentIcon
+            color: "#bababa"
         }
     }
 }

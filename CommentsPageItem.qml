@@ -34,9 +34,10 @@ Column {
         }
         Image {
             id: commentIcon
-            source: "media/Comments.png"
+            source: "media/ui/comments.svg"
             anchors{ left: parent.left; bottom: parent.bottom }
             height: units.gu(1.75); width: units.gu(1.75)
+            sourceSize { height: height; width: width }
         }
 
         Label {
@@ -56,7 +57,7 @@ Column {
             Image{
                 id: openIcon
                 property bool isOpen: false
-                source: "media/ListArrow.png"
+                source: "media/ui/item_toggle.png"
                 anchors.right: parent.right; anchors.verticalCenter: sortingLabel.verticalCenter
                 height: units.gu(1.25); width: units.gu(0.75)
                 rotation: isOpen ? 270 : 90

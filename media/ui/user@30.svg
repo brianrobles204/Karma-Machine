@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="135"
+   height="135"
+   id="svg2"
+   version="1.1"
+   inkscape:version="0.48.3.1 r9886"
+   sodipodi:docname="hamster.svg">
+  <defs
+     id="defs4" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="1.979899"
+     inkscape:cx="35.083668"
+     inkscape:cy="67.956736"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     inkscape:window-width="1366"
+     inkscape:window-height="722"
+     inkscape:window-x="0"
+     inkscape:window-y="24"
+     inkscape:window-maximized="1" />
+  <metadata
+     id="metadata7">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(0,-917.36218)"
+     style="display:inline">
+    <g
+       id="g3244"
+       mask="none">
+      <path
+         style="fill:#888888;fill-opacity:1;stroke:none;display:inline"
+         d="M 106.25 18.59375 C 101.66856 18.59375 97.751244 21.424304 96.15625 25.4375 L 72.3125 19.5 L 72.28125 19.65625 L 71.5 19.5 L 61.8125 48.25 C 51.144901 48.810978 41.408882 51.523865 33.625 55.71875 C 31.050922 54.489992 28.020689 53.78125 24.75 53.78125 C 15.544785 53.78125 8.09375 59.39424 8.09375 66.34375 C 8.09375 70.755618 11.104569 74.628537 15.65625 76.875 C 15.37271 78.290399 15.1875 79.752959 15.1875 81.21875 C 15.1875 99.489709 37.903435 114.28125 65.9375 114.28125 C 93.971566 114.28125 116.71875 99.489709 116.71875 81.21875 C 116.71875 79.341252 116.46105 77.479622 116 75.6875 C 120.46816 73.43034 123.40625 69.582275 123.40625 65.21875 C 123.40625 58.26924 115.92397 52.625 106.71875 52.625 C 103.06947 52.625 99.71385 53.529472 96.96875 55.03125 C 88.526695 50.77524 77.969323 48.206145 66.5 48.125 L 74.3125 25.09375 L 95.4375 30.34375 C 95.893753 35.921269 100.55484 40.3125 106.25 40.3125 C 112.24734 40.3125 117.09375 35.434837 117.09375 29.4375 C 117.09375 23.440163 112.24734 18.59375 106.25 18.59375 z M 83.5 66.25 C 88.018924 66.25 91.6875 69.918576 91.6875 74.4375 C 91.6875 78.956424 88.018924 82.625 83.5 82.625 C 78.981076 82.625 75.3125 78.956424 75.3125 74.4375 C 75.3125 69.918576 78.981076 66.25 83.5 66.25 z M 48.96875 66.28125 C 53.487674 66.28125 57.15625 69.918576 57.15625 74.4375 C 57.15625 78.956424 53.487674 82.625 48.96875 82.625 C 44.449826 82.625 40.78125 78.956424 40.78125 74.4375 C 40.78125 69.918576 44.449826 66.28125 48.96875 66.28125 z M 48.59375 93.75 C 58.978063 99.9806 71.316565 101.08565 82.8125 94.71875 L 84.875 98.46875 C 72.034705 105.58015 57.877325 104.3389 46.375 97.4375 L 48.59375 93.75 z "
+         transform="translate(0,917.36218)"
+         id="path3081" />
+    </g>
+  </g>
+</svg>

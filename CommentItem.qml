@@ -48,7 +48,7 @@ SwipeBox{
         rightMargin: level === 1 ? units.gu(1) : 0
     }
 
-    height: commentInfo.height + commentFlair.boxHeight + commentBody.height + replyColumn.height + minimizeRect.height + internalPadding * 1.5 + bottomPadding
+    height: commentInfo.height + commentBody.height + replyColumn.height + minimizeRect.height + internalPadding * 1.5 + bottomPadding
 
     onSwipedRight: {
         if(redditNotifier.isLoggedIn) {
@@ -131,8 +131,10 @@ SwipeBox{
 
     Label {
         id: commentInfo
-        text: {
+
+        function generateText(inlineFlair) {
             var author = commentObj ? commentObj.data.author : "[:(]"
+            var includeFlair = commentObj && typeof commentObj.data.author_flair_text === "string" && commentObj.data.author_flair_text !== ""
             var score = commentObj ? (commentObj.data.ups - commentObj.data.downs) : 0
             var timeRaw = commentObj ? commentObj.data.created_utc : new Date()
             var time = MiscUtils.timeSince(new Date(timeRaw * 1000))
@@ -148,7 +150,12 @@ SwipeBox{
                 infoText += author
             }
 
-            infoText += "</b> <b>·</b> "
+            infoText += "</b>"
+            if(includeFlair && inlineFlair) {
+                infoText += " <b>·</b> " + commentObj.data.author_flair_text
+            }
+            infoText += " <b>·</b> "
+
             if(commentObj && commentObj.data.score_hidden) {
                 infoText += "[score hidden]"
             } else {
@@ -156,8 +163,21 @@ SwipeBox{
             }
 
             infoText += " <b>·</b> " + time
+            if(includeFlair && !inlineFlair) {
+                infoText += "<br/>&nbsp; <font color='#a5a5a5'>" + commentObj.data.author_flair_text + "</font>"
+            }
+
             return infoText
         }
+
+        function updateInfo() {
+            text = generateText(true)
+            if(truncated) {
+                text = generateText(false)
+            }
+        }
+
+        text: "Loading…"
         anchors {
             top: parent.top
             topMargin: swipeBox.internalPadding
@@ -168,26 +188,14 @@ SwipeBox{
         }
         fontSize: "x-small"
         elide: Text.ElideRight
+        lineHeight: 1.2
         color: "#999999"
-    }
 
-    Label {
-        id: commentFlair
-        property real boxHeight: visible ? height + anchors.topMargin : 0
-        text: visible ? commentObj.data.author_flair_text : ""
-        anchors {
-            top: commentInfo.bottom
-            topMargin: visible ? swipeBox.internalPadding * 0.4 : 0
-            left: parent.left
-            leftMargin: swipeBox.internalPadding * 1.4
-            right: parent.right
-            rightMargin: swipeBox.internalPadding
+        Connections {
+            target: swipeBox
+            onCommentObjChanged: commentInfo.updateInfo()
+            onWidthChanged: commentInfo.updateInfo()
         }
-        fontSize: "x-small"
-        elide: Text.ElideRight
-        color: "#a5a5a5"
-        visible: commentObj && typeof commentObj.data.author_flair_text === "string" && commentObj.data.author_flair_text !== ""
-        height: visible ? implicitHeight + swipeBox.internalPadding * 0.4 : 0
     }
 
     Label {
@@ -195,7 +203,7 @@ SwipeBox{
         text: commentObj ? MiscUtils.getHtmlText(commentObj.data.body, bgRect.color) : ""
         textFormat: Text.RichText
         anchors {
-            top: commentFlair.bottom
+            top: commentInfo.bottom
             topMargin: swipeBox.internalPadding/2
             left: parent.left
             leftMargin: swipeBox.internalPadding
@@ -264,7 +272,7 @@ SwipeBox{
         }
     }
 
-    Rectangle {
+    Item {
         id: minimizeRect
 
         property real padding: units.gu(0.8)
@@ -277,8 +285,6 @@ SwipeBox{
             right: parent.right
         }
         height: defaultHeight
-        color: !isLevelOdd ? primaryColor : altColor
-        radius: units.gu(0.6)
         opacity: swipeBox.isMinimized ? 1 : 0
         visible: opacity !== 0
 
@@ -286,7 +292,7 @@ SwipeBox{
 
         Label {
             id: minimizeLabel
-            text: swipeBox.replyNo !== 1 ? swipeBox.replyNo + " Hidden" : "One hidden"
+            text: swipeBox.replyNo !== 1 ? swipeBox.replyNo + " Hidden comments" : "One hidden comment"
             fontSize: "x-small"
             font.weight: Font.Bold
             color: "#999999"

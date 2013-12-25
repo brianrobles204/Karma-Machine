@@ -110,7 +110,7 @@ Item {
                     verticalCenterOffset: units.gu(0.2)
                 }
                 visible: webSection.canBeOpened
-                source: "media/icon_close_preview.png"
+                source: "media/ui/header_toggle.png"
                 rotation: commentsSection.state == "commentsOpen" ? 0 : 180
                 Behavior on rotation {UbuntuNumberAnimation{}}
             }
@@ -525,7 +525,7 @@ Item {
             }
 
             Image {
-                source: "media/peekShadow.png"
+                source: "media/ui/peek_shadow.png"
                 width: units.gu(30)
                 height: units.gu(3)
                 anchors {
@@ -548,9 +548,14 @@ Item {
 
                 Image {
                     id: commentsPeekIcon
-                    source: "media/CommentsDark.png"
-                    height: units.gu(1.75)
-                    width: units.gu(1.75)
+                    source: "media/ui/comments@30.svg"
+                    width: units.gu(1.75); height: units.gu(1.75)
+                    sourceSize { width: width; height: height }
+                }
+                ColorOverlay {
+                    anchors.fill: commentsPeekIcon
+                    source: commentsPeekIcon
+                    color: "#555555"
                 }
 
                 Label {

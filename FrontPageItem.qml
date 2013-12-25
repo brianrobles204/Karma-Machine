@@ -277,7 +277,7 @@ Item {
                         verticalCenter: subredditSwitcher.verticalCenter
                     }
                     property bool isOpen: false
-                    source: "media/ListArrow.png"
+                    source: "media/ui/item_toggle.png"
                     height: units.gu(1.25)
                     width: units.gu(0.75)
                     rotation: isOpen ? 270 : 90
@@ -355,7 +355,7 @@ Item {
                                         }
                                     }
                                     ToolbarButton {
-                                        iconSource: "media/user.png"
+                                        iconSource: "media/ui/comments.svg"
                                         text: postList.subreddit !== "All" ? "All" : "<b>All</b>"
                                         MouseArea {
                                             anchors.fill: parent
@@ -368,7 +368,7 @@ Item {
                                     ToolbarButton {
                                         property bool custom: redditObj.getSubscribedArray().indexOf(postList.subreddit) !== -1 || postList.subreddit === "" || postList.subreddit === "All"
 
-                                        iconSource: "media/CommentsDark.png"
+                                        iconSource: "media/ui/refresh.svg"
                                         text: custom ? "Custom…" : "<b>Custom…</b>"
 
                                         MouseArea {
@@ -401,7 +401,7 @@ Item {
                                         }
                                     }
                                     Image {
-                                        source: "media/toolbar/reload.svg"
+                                        source: "media/ui/refresh.svg"
                                         width: units.gu(2.2); height: width
                                         opacity: parent.enabled ? 1 : 0.5
                                         anchors {
@@ -410,6 +410,7 @@ Item {
                                             right: parent.right
                                             rightMargin: units.gu(1)
                                         }
+                                        sourceSize { width: width; height: height }
                                     }
                                 }
                                 Item {
@@ -613,12 +614,10 @@ Item {
 
                     Image {
                         id: userImg
-                        width: units.gu(4.5)
-                        height: units.gu(4.5)
-                        source: "media/user.png"
-                        anchors {
-                            horizontalCenter: parent.horizontalCenter
-                        }
+                        source: "media/ui/user.svg"
+                        width: units.gu(4.5); height: units.gu(4.5)
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        sourceSize { width: width; height: height }
                     }
                     Label {
                         id: userName
@@ -881,7 +880,8 @@ Item {
 
         Image {
             id: moreImage
-            source: "media/spinner.png"
+            source: "media/ui/spinner.png"
+            width: units.gu(3); height: units.gu(3)
             anchors.fill: parent
             rotation: parent.overflow
             smooth: true
