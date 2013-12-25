@@ -421,15 +421,15 @@ Item {
         Image {
             source: 'media/webHint.svg'
             anchors.horizontalCenter: parent.horizontalCenter
-            width: units.gu(2)
-            height: units.gu(2)
+            width: units.gu(2); height: units.gu(2)
+            sourceSize { height: height; width: width }
         }
         Image {
             source: 'media/upHint.png'
             anchors.horizontalCenter: parent.horizontalCenter
-            width: units.gu(2)
-            height: units.gu(2)
+            width: units.gu(2); height: units.gu(2)
             rotation: commentsSection.contentY < -units.gu(20) ? 0 : 180
+            sourceSize { height: height; width: width }
             Behavior on rotation{UbuntuNumberAnimation{}}
         }
     }
