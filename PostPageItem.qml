@@ -419,13 +419,13 @@ Item {
         spacing: units.gu(1)
         opacity: Math.min(((-commentsSection.contentY)/units.gu(20)), 1)
         Image {
-            source: 'media/webHint.svg'
+            source: 'media/ui/web-hint.svg'
             anchors.horizontalCenter: parent.horizontalCenter
             width: units.gu(2); height: units.gu(2)
             sourceSize { height: height; width: width }
         }
         Image {
-            source: 'media/upHint.png'
+            source: 'media/ui/up-hint.png'
             anchors.horizontalCenter: parent.horizontalCenter
             width: units.gu(2); height: units.gu(2)
             rotation: commentsSection.contentY < -units.gu(20) ? 0 : 180

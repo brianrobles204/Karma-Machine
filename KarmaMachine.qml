@@ -364,7 +364,7 @@ MainView {
                         ToolbarButton {
                             action: Action {
                                 text: "External"
-                                iconSource: "media/tool-actions/text-html-symbolic.svg"
+                                iconSource: "media/tool-actions/external.svg"
                                 onTriggered: {
                                     Qt.openUrlExternally(linkOpen ? postPageItem.webUrl : postPageItem.commentsUrl)
                                 }
