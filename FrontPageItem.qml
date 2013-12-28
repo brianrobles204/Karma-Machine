@@ -1,9 +1,8 @@
 import QtQuick 2.0
 import QtGraphicalEffects 1.0
 import Ubuntu.Components 0.1
-import Ubuntu.Components.ListItems 0.1 as ListItems
 import Ubuntu.Components.Popups 0.1
-import "JSONListModel" as JSON
+import Ubuntu.Components.ListItems 0.1 as ListItems
 import "Utils/Misc.js" as MiscUtils
 import "QReddit/QRHelper.js" as QRHelper
 
