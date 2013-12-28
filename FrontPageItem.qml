@@ -8,8 +8,9 @@ import "QReddit/QRHelper.js" as QRHelper
 
 Item {
     id: frontPageItem
-    property variant header
-    property variant flickable: postFlickable
+
+    property var header
+    property var flickable: postFlickable
     property string title: (headerAddition.isOpen && header.flickable == postFlickable) ? "Karma Machine" : postList.subreddit == "" ? "FrontPage" : postList.subreddit
 
     function toggleHeaderAddition() {

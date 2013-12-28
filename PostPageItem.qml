@@ -7,15 +7,19 @@ import "Utils/Misc.js" as MiscUtils
 Item {
     id: postPageItem
 
-    property var postObj: activePostObj//activePostItem.postObj
+    property var postObj: activePostObj
+    property var toolbar
     property Flickable flickable
     property WebView __webSection: webSection
-    property string webUrl: webSection.url
-    property string commentsUrl: postObj ? "http://reddit.com" + postObj.data.permalink : "http://reddit.com"
+
     property string title: postHeader.title == "" ? " " : postHeader.title
     property string subTitle: postObj ? MiscUtils.simpleFixHtmlChars(postObj.data.title) : ""
+
     property bool linkOpen: commentsSection.state == "linkOpen"
     property bool canBeToggled: webSection.canBeOpened && postObj != null
+
+    property string webUrl: webSection.url
+    property string commentsUrl: postObj ? "http://reddit.com" + postObj.data.permalink : "http://reddit.com"
 
     function openPostContent(content, forceComments) {
         if (typeof content === "string") {
@@ -434,39 +438,58 @@ Item {
         }
     }
 
+    MouseArea {
+        id: commentsPeekMouseArea
+
+        onClicked: commentsSection.show()
+
+        width: commentsPeekItem.width; height: commentsPeekItem.height
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottom: parent.bottom
+        z: 98
+    }
+
     Item {
         id: commentsPeekItem
-        height: commentsPeekRect.childrenRect.height + commentsPeekRect.margins*2 + commentsPeekRect.childMargins*2
-        width: parent.width > maxWidth ? maxWidth : parent.width
-        anchors.horizontalCenter: parent.horizontalCenter
-        z: 98
 
         property real maxWidth: units.gu(50)
 
-        transitions: Transition {
-            UbuntuNumberAnimation { properties: 'y' }
-        }
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottom: parent.bottom
+        height: commentsPeekRect.childrenRect.height + commentsPeekRect.margins*2 + commentsPeekRect.childMargins*2
+        width: parent.width > maxWidth ? maxWidth : parent.width
+        z: 97
 
         states: [
             State {
                 name: "peek"
                 PropertyChanges{
                     target: commentsPeekItem
-                    y: parent.height - height
+                    anchors.bottomMargin: toolbar.opened ? toolbar.height : 0
+                }
+                PropertyChanges{
+                    target: commentsPeekMouseArea
+                    anchors.bottomMargin: toolbar.opened ? toolbar.height : 0
                 }
             },
             State {
                 name: "hideBottom"
                 PropertyChanges{
                     target: commentsPeekItem
-                    y: parent.height
+                    anchors.bottomMargin: -height
+                }
+                PropertyChanges{
+                    target: commentsPeekMouseArea
+                    anchors.bottomMargin: -height
                 }
             }
         ]
 
-        MouseArea {
-            anchors.fill: parent
-            onClicked: commentsSection.show()
+        Behavior on anchors.bottomMargin { UbuntuNumberAnimation {} }
+
+        Connections {
+            target: postPageItem.toolbar
+            onOpenedChanged: if(postPageItem.toolbar.opened) commentsPeekItem.state = "peek"
         }
 
         Rectangle {

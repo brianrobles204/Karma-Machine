@@ -149,6 +149,7 @@ MainView {
 
             PostPageItem {
                 id: postPageItem
+                toolbar: pageStack.toolbar
                 z: 100
             }
             Image {
@@ -170,8 +171,8 @@ MainView {
             //To disable opening comments when the toolbar is open
             MouseArea {
                 anchors.fill: parent
-                enabled: frontPageToolbarItems.opened
-                z: 300
+                enabled: pageStack.toolbar.opened
+                z: 1000
                 onClicked: {return true}
             }
 
@@ -240,6 +241,7 @@ MainView {
 
         Page {
             id: postPage
+
             anchors.fill: parent
             visible: false
 
