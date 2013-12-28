@@ -11,7 +11,7 @@ SwipeBox{
     property string vote: commentObj ? commentObj.data.likes === true ? "up" : commentObj.data.likes === false ? "down" : "" : ""
 
     property real internalPadding: units.gu(1)
-    property real bottomPadding: isMinimizeable ? units.gu(0.6) : 0
+    property real bottomPadding: isMinimizeable && !isMinimized ? units.gu(0.6) : 0
     property color primaryColor: "#f2f2f2"
     property color altColor: "#eaeaea"
 
@@ -210,7 +210,6 @@ SwipeBox{
             right: parent.right
             rightMargin: swipeBox.internalPadding
         }
-        height: implicitHeight + swipeBox.internalPadding
         wrapMode: Text.Wrap
         fontSize: "small"
         color: UbuntuColors.coolGrey
@@ -221,7 +220,7 @@ SwipeBox{
         id: replyColumn
 
         property bool isMinimized: swipeBox.isMinimized
-        property real defaultHeight: !isMinimized ? implicitHeight : 0
+        property real defaultHeight: !isMinimized ? implicitHeight: 0
 
         anchors {
             top: commentBody.bottom
@@ -235,6 +234,8 @@ SwipeBox{
         visible: opacity !== 0
 
         Behavior on opacity { UbuntuNumberAnimation { duration: UbuntuAnimation.BriskDuration } }
+
+        Item { width: 1; height: swipeBox.internalPadding }
 
         Repeater {
             id: replyRepeater
@@ -275,7 +276,7 @@ SwipeBox{
     Item {
         id: minimizeRect
 
-        property real padding: units.gu(0.8)
+        property real padding: units.gu(1)
         property real defaultHeight: swipeBox.isMinimized ? minimizeLabel.height + 2*padding : 0
 
         anchors {
