@@ -36,6 +36,11 @@ Row {
     }
 
     Emblem {
+        icon: "stickied"
+        visible: thingObj === undefined || ( thingObj.data.hasOwnProperty("stickied") && thingObj.data.stickied )
+    }
+
+    Emblem {
         icon: "gilded"
         visible: thingObj === undefined || ( thingObj.data.hasOwnProperty("gilded") && thingObj.data.gilded )
 
