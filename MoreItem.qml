@@ -8,7 +8,7 @@ Rectangle {
     property Item parentComment
     property bool enabled: true
 
-    property real padding: units.gu(0.8)
+    property real padding: units.gu(0.9)
     property color primaryColor: "#f2f2f2"
     property color altColor: "#eaeaea"
 
@@ -66,7 +66,7 @@ Rectangle {
             top: parent.top
             topMargin: rectangle.padding
             left: moreEmblem.right
-            leftMargin: rectangle.padding * 0.5
+            leftMargin: rectangle.padding * 0.75
         }
 
         Behavior on opacity { UbuntuNumberAnimation{} }

@@ -54,7 +54,7 @@
      id="layer1"
      transform="translate(0,-992.36218)">
     <rect
-       style="fill:#6e8caf;fill-opacity:1;stroke:none"
+       style="fill:#6eaf6e;fill-opacity:1;stroke:none"
        id="rect2985"
        width="7"
        height="32"
@@ -68,6 +68,42 @@
        transform="matrix(0,-1,1,0,-992.36218,1052.3622)"
        width="60"
        height="60"
-       style="fill:#6e8caf;fill-opacity:1" />
+       style="fill:#6eaf6e;fill-opacity:1" />
+    <g
+       id="g3017"
+       style="fill:#6eaf6e;fill-opacity:1">
+      <rect
+         y="1001.3622"
+         x="2.75"
+         height="42"
+         width="7"
+         id="rect3011"
+         style="fill:#6eaf6e;fill-opacity:1;stroke:none" />
+      <rect
+         y="1036.3622"
+         x="7.75"
+         height="7"
+         width="9"
+         id="rect3013"
+         style="fill:#6eaf6e;fill-opacity:1;stroke:none" />
+      <use
+         height="60"
+         width="60"
+         transform="translate(0,-35.000003)"
+         id="use3015"
+         xlink:href="#rect3013"
+         y="0"
+         x="0"
+         style="fill:#6eaf6e;fill-opacity:1" />
+    </g>
+    <use
+       x="0"
+       y="0"
+       xlink:href="#g3017"
+       id="use3022"
+       transform="matrix(-1,0,0,-1,60,2044.7244)"
+       width="60"
+       height="60"
+       style="fill:#6eaf6e;fill-opacity:1" />
   </g>
 </svg>

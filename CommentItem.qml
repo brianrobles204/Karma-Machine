@@ -265,13 +265,12 @@ SwipeBox{
     Item {
         id: minimizeRect
 
-        property real padding: units.gu(1)
+        property real padding: units.gu(0.9)
         property real defaultHeight: swipeBox.isMinimized ? minimizeLabel.height + 2*padding : 0
 
         anchors {
             top: replyColumn.bottom
             left: parent.left
-            leftMargin: swipeBox.internalPadding
             right: parent.right
         }
         height: defaultHeight
@@ -279,6 +278,16 @@ SwipeBox{
         visible: opacity !== 0
 
         Behavior on opacity { UbuntuNumberAnimation { duration: UbuntuAnimation.BriskDuration } }
+
+        Emblem {
+            id: hiddenEmblem
+            icon: "hidden"
+            anchors {
+                verticalCenter: minimizeLabel.verticalCenter
+                left: parent.left
+                leftMargin: minimizeRect.padding
+            }
+        }
 
         Label {
             id: minimizeLabel
@@ -288,9 +297,9 @@ SwipeBox{
             color: "#999999"
             anchors {
                 top: parent.top
-                topMargin: minimizeRect.padding
-                left: parent.left
-                leftMargin: minimizeRect.padding
+                topMargin: swipeBox.internalPadding
+                left: hiddenEmblem.right
+                leftMargin: minimizeRect.padding * 0.75
             }
         }
     }

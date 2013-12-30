@@ -102,7 +102,7 @@ Item {
                     }
                     var subreddit = postObj ? postObj.data.subreddit : "reddit"
 
-                    var over18 = postObj && postObj.data.over_18 ? "<b><font color='#DF4D4D'>NSFW</font> ·</b> " : ""
+                    var over18 = postObj && postObj.data.over_18 ? "<b><font color='#D97474'>NSFW</font> ·</b> " : ""
                     var timeRaw = postObj ? postObj.data.created_utc : 0
                     var time = MiscUtils.timeSince(new Date(timeRaw * 1000))
                     var domain = postObj ? postObj.data.domain : "reddit.com"
