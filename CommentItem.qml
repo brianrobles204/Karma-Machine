@@ -53,8 +53,8 @@ SwipeBox{
     onSwipedRight: {
         if(redditNotifier.isLoggedIn) {
             var voteConnObj = commentObj.upvote()
+            commentObjChanged()
             voteConnObj.onSuccess.connect(function(){
-                //Update the comment object (as it does not emit a changed signal automatically)
                 commentObjChanged()
             })
         }
@@ -62,8 +62,8 @@ SwipeBox{
     onSwipedLeft: {
         if(redditNotifier.isLoggedIn) {
             var voteConnObj = commentObj.downvote()
+            commentObjChanged()
             voteConnObj.onSuccess.connect(function(){
-                //Update the comment object (as it does not emit a changed signal automatically)
                 commentObjChanged()
             })
         }
@@ -112,21 +112,11 @@ SwipeBox{
         UbuntuNumberAnimation { duration: UbuntuAnimation.BriskDuration }
     }
 
-    Rectangle {
-        property real size: units.gu(1)
-        property string vote: swipeBox.vote
-        anchors {
-            top: parent.top
-            right: parent.right
-            topMargin: swipeBox.internalPadding
-            rightMargin: swipeBox.internalPadding
-        }
-        width: size
-        height: size
-        radius: size/2
-        color: vote == "up" ? "#FF8B60" : "#9494FF"
-        visible: vote == "up" || vote == "down"
-        z: 100
+    EmblemRow {
+        id: emblemRow
+        thingObj: commentObj
+        padding: swipeBox.internalPadding
+        animate: false
     }
 
     Label {
@@ -172,8 +162,10 @@ SwipeBox{
 
         function updateInfo() {
             text = generateText(true)
-            if(truncated) {
+            wrapMode = Text.NoWrap
+            if(contentWidth > width) {
                 text = generateText(false)
+                wrapMode = Text.Wrap
             }
         }
 
@@ -183,11 +175,10 @@ SwipeBox{
             topMargin: swipeBox.internalPadding
             left: parent.left
             leftMargin: swipeBox.internalPadding
-            right: parent.right
+            right: emblemRow.left
             rightMargin: swipeBox.internalPadding
         }
         fontSize: "x-small"
-        elide: Text.ElideRight
         lineHeight: 1.2
         color: "#999999"
 
@@ -224,8 +215,6 @@ SwipeBox{
 
         anchors {
             top: commentBody.bottom
-            left: parent.left
-            right: parent.right
         }
         width: parent.width
         height: defaultHeight;
@@ -235,7 +224,7 @@ SwipeBox{
 
         Behavior on opacity { UbuntuNumberAnimation { duration: UbuntuAnimation.BriskDuration } }
 
-        Item { width: 1; height: swipeBox.internalPadding }
+        Item { width: 1; height: swipeBox.internalPadding - replyColumn.spacing }
 
         Repeater {
             id: replyRepeater

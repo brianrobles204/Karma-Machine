@@ -328,6 +328,9 @@ var BaseThing = function(reddit, thing) {
         this[key] = thing[key];
     }
 
+    this.data.voteLoading = false;
+    this.data.voteLoadingDir = this.data.likes;
+
     this.toString = function() {
         return "[object BaseThing]"
     }
@@ -366,7 +369,6 @@ var ThingObj = function(reddit, thing) {
     BaseThing.apply(this, arguments);
 
     var _setupOrigScores = (function(that) {
-
         that.data.origUps = that.data.ups;
         that.data.origDowns = that.data.downs;
         if(that.data.hasOwnProperty('score')) {
@@ -402,6 +404,16 @@ var ThingObj = function(reddit, thing) {
                                                     dir: direction,
                                                     id: this.data.name
                                                 });
+
+        this.data.voteLoading = true;
+        if(direction === 0) {
+            this.data.voteLoadingDir = null;
+        } else if(direction === 1) {
+            this.data.voteLoadingDir = true;
+        } else if(direction === -1) {
+            this.data.voteLoadingDir = false;
+        }
+
         var that = this;
         voteConnObj.onConnectionSuccess.connect(function(response){
 
@@ -422,6 +434,8 @@ var ThingObj = function(reddit, thing) {
                 that.data.likes = false
             }
 
+            that.data.voteLoading = false;
+            that.data.voteLoadingDir = that.data.likes;
             voteConnObj.success()
         })
         return voteConnObj

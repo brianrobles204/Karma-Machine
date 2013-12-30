@@ -311,6 +311,7 @@ MainView {
                                 enabled: redditNotifier.isLoggedIn
                                 onTriggered: {
                                     var voteConnObj = activePostObj.upvote()
+                                    activePostObjChanged()
                                     voteConnObj.onSuccess.connect(function(){
                                         //Update the comment object (as it does not emit a changed signal automatically)
                                         activePostObjChanged()
@@ -327,6 +328,7 @@ MainView {
                                 enabled: redditNotifier.isLoggedIn
                                 onTriggered: {
                                     var voteConnObj = activePostObj.downvote()
+                                    activePostObjChanged()
                                     voteConnObj.onSuccess.connect(function(){
                                         //Update the comment object (as it does not emit a changed signal automatically)
                                         activePostObjChanged()

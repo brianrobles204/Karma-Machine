@@ -6,7 +6,6 @@ SwipeBox{
 
     property var postObj
 
-    readonly property string vote: postObj ? postObj.data.likes === true ? "up" : postObj.data.likes === false ? "down" : "" : ""
     readonly property bool selected: activePostObj ? postObj.data.name === activePostObj.data.name : false
 
     signal commentsTriggered
@@ -32,6 +31,11 @@ SwipeBox{
         checkTutorial()
         if(redditNotifier.isLoggedIn) {
             var voteConnObj = postObj.upvote()
+            if (selected) {
+                activePostObjChanged()
+            } else {
+                postObjChanged()
+            }
             voteConnObj.onSuccess.connect(function(){
                 //Update the comment object (as it does not emit a changed signal automatically)
                 if (selected) {
@@ -46,6 +50,11 @@ SwipeBox{
         checkTutorial()
         if(redditNotifier.isLoggedIn) {
             var voteConnObj = postObj.downvote()
+            if (selected) {
+                activePostObjChanged()
+            } else {
+                postObjChanged()
+            }
             voteConnObj.onSuccess.connect(function(){
                 //Update the comment object (as it does not emit a changed signal automatically)
                 if (selected) {
@@ -90,7 +99,6 @@ SwipeBox{
         anchors.top: headerAdditionHolder.bottom
         selected: swipeBox.selected
         postObj: swipeBox.postObj
-        vote: swipeBox.vote
 
         onCommentsTriggered: swipeBox.commentsTriggered()
     }

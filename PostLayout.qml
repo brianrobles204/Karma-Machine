@@ -7,7 +7,6 @@ Item {
     id: postRow
 
     property var postObj
-    property string vote
     property real spacingConstant: units.gu(1.25)
     property bool selected
     readonly property bool stickied: postObj ? postObj.data.stickied : false
@@ -29,21 +28,12 @@ Item {
         color: !postRow.selected ? primaryColor : selectedColor
     }
 
-    Rectangle {
-        property real size: units.gu(1)
-        property string vote: postRow.vote
-        anchors {
-            top: parent.top
-            right: parent.right
-            topMargin: units.gu(1)
-            rightMargin: units.gu(1)
-        }
-        width: size
-        height: size
-        radius: size/2
-        color: vote == "up" ? "#FF8B60" : "#9494FF"
-        visible: vote == "up" || vote == "down"
-        z: 100
+    EmblemRow {
+        id: emblemRow
+
+        thingObj: postRow.postObj
+        padding: postRow.spacingConstant
+        lineHeight: emblemRow.height
     }
 
     UbuntuShape {
@@ -110,14 +100,14 @@ Item {
                     } else if (postObj && postObj.data.distinguished === "moderator"){
                         author = "<font color='#6EAF6E'>" + author + " [m]</font>"
                     }
-
                     var subreddit = postObj ? postObj.data.subreddit : "reddit"
 
+                    var over18 = postObj && postObj.data.over_18 ? "<b><font color='#DF4D4D'>NSFW</font> ·</b> " : ""
                     var timeRaw = postObj ? postObj.data.created_utc : 0
                     var time = MiscUtils.timeSince(new Date(timeRaw * 1000))
                     var domain = postObj ? postObj.data.domain : "reddit.com"
 
-                    return "<b>" + author + "</b> in <b>r/" + subreddit + "</b><br/>" + time + " <b>·</b> " + domain
+                    return "<b>" + author + "</b> in <b>r/" + subreddit + "</b><br/>" + over18 + time + " <b>·</b> " + domain
                 }
                 horizontalAlignment: Text.AlignLeft
                 fontSize: "x-small"
@@ -131,8 +121,8 @@ Item {
         width: units.gu(5)
         height: parent.height - 2*postRow.spacingConstant
         anchors{
-            top: parent.top
-            topMargin: postRow.spacingConstant
+            top: emblemRow.bottom
+            topMargin: emblemRow.empty ? postRow.spacingConstant : 0
             right: parent.right
             rightMargin: postRow.spacingConstant
         }

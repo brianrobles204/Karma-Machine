@@ -6,7 +6,6 @@ SwipeBox{
     id: swipeBox
 
     property var postObj: activePostObj
-    property string vote: postObj ? postObj.data.likes === true ? "up" : postObj.data.likes === false ? "down" : "" : ""
 
     height: descHeader.height + divider.height + descContent.height
     anchors {
@@ -17,8 +16,8 @@ SwipeBox{
     onSwipedRight: {
         if(redditNotifier.isLoggedIn) {
             var voteConnObj = postObj.upvote()
+            activePostObjChanged()
             voteConnObj.onSuccess.connect(function(){
-                //Update the comment object (as it does not emit a changed signal automatically)
                 activePostObjChanged()
             })
         }
@@ -26,34 +25,33 @@ SwipeBox{
     onSwipedLeft: {
         if(redditNotifier.isLoggedIn) {
             var voteConnObj = postObj.downvote()
+            activePostObjChanged()
             voteConnObj.onSuccess.connect(function(){
-                //Update the comment object (as it does not emit a changed signal automatically)
                 activePostObjChanged()
             })
         }
     }
 
-    Rectangle {
-        property real size: units.gu(1)
-        property string vote: swipeBox.vote
-        anchors {
-            top: parent.top
-            right: parent.right
-            topMargin: units.gu(1)
-            rightMargin: units.gu(1)
-        }
-        width: size
-        height: size
-        radius: size/2
-        color: vote == "up" ? "#FF8B60" : "#9494FF"
-        visible: vote == "up" || vote == "down"
-        z: 100
-    }
+//    Rectangle {
+//        property real size: units.gu(1)
+//        property string vote: swipeBox.vote
+//        anchors {
+//            top: parent.top
+//            right: parent.right
+//            topMargin: units.gu(1)
+//            rightMargin: units.gu(1)
+//        }
+//        width: size
+//        height: size
+//        radius: size/2
+//        color: vote == "up" ? "#FF8B60" : "#9494FF"
+//        visible: vote == "up" || vote == "down"
+//        z: 100
+//    }
 
     PostLayout {
         id: descHeader
         postObj: swipeBox.postObj
-        vote: swipeBox.vote
     }
     Rectangle {
         id: divider
