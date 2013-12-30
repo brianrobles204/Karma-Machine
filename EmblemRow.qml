@@ -54,7 +54,7 @@ Row {
 
         property real loadingOpacity
 
-        visible: thingObj === undefined || thingObj.data.voteLoadingDir === true
+        visible: thingObj === undefined || thingObj.priv.likesLocal === true
         opacity: 1.0
 
         SequentialAnimation on loadingOpacity {
@@ -72,7 +72,7 @@ Row {
 
         states: State {
             name: "LOADING"
-            when: thingObj !== undefined && thingObj.data.voteLoading && thingObj.data.voteLoadingDir === true
+            when: thingObj !== undefined && thingObj.priv.likesLoading && thingObj.priv.likesLocal === true
             PropertyChanges { target: upvoteEmblem; opacity: upvoteEmblem.loadingOpacity }
         }
 
@@ -87,7 +87,7 @@ Row {
 
         property real loadingOpacity
 
-        visible: thingObj === undefined || thingObj.data.voteLoadingDir === false
+        visible: thingObj === undefined || thingObj.priv.likesLocal === false
         opacity: 1.0
 
         SequentialAnimation on loadingOpacity {
@@ -105,7 +105,7 @@ Row {
 
         states: State {
             name: "LOADING"
-            when: thingObj !== undefined && thingObj.data.voteLoading && thingObj.data.voteLoadingDir === false
+            when: thingObj !== undefined && thingObj.priv.likesLoading && thingObj.priv.likesLocal === false
             PropertyChanges { target: downvoteEmblem; opacity: downvoteEmblem.loadingOpacity }
         }
 

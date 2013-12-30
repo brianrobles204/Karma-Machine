@@ -328,8 +328,9 @@ var BaseThing = function(reddit, thing) {
         this[key] = thing[key];
     }
 
-    this.data.voteLoading = false;
-    this.data.voteLoadingDir = this.data.likes;
+    this.priv = {}
+    this.priv.likesLoading = false;
+    this.priv.likesLocal = this.data.likes;
 
     this.toString = function() {
         return "[object BaseThing]"
@@ -369,20 +370,20 @@ var ThingObj = function(reddit, thing) {
     BaseThing.apply(this, arguments);
 
     var _setupOrigScores = (function(that) {
-        that.data.origUps = that.data.ups;
-        that.data.origDowns = that.data.downs;
+        that.priv.origUps = that.data.ups;
+        that.priv.origDowns = that.data.downs;
         if(that.data.hasOwnProperty('score')) {
-            that.data.origScore = that.data.score
+            that.priv.origScore = that.data.score
         } else {
-            that.data.origScore = that.data.score = that.data.ups - that.data.downs
+            that.priv.origScore = that.data.score = that.data.ups - that.data.downs
         }
 
         if(that.data.likes === true) {
-            that.data.origUps -= 1
-            that.data.origScore -=  1
+            that.priv.origUps -= 1
+            that.priv.origScore -=  1
         } else if (that.data.likes === false) {
-            that.data.origDowns -= 1
-            that.data.origScore += 1
+            that.priv.origDowns -= 1
+            that.priv.origScore += 1
         }
     }(this));
 
@@ -405,37 +406,37 @@ var ThingObj = function(reddit, thing) {
                                                     id: this.data.name
                                                 });
 
-        this.data.voteLoading = true;
+        this.priv.likesLoading = true;
         if(direction === 0) {
-            this.data.voteLoadingDir = null;
+            this.priv.likesLocal = null;
         } else if(direction === 1) {
-            this.data.voteLoadingDir = true;
+            this.priv.likesLocal = true;
         } else if(direction === -1) {
-            this.data.voteLoadingDir = false;
+            this.priv.likesLocal = false;
         }
 
         var that = this;
         voteConnObj.onConnectionSuccess.connect(function(response){
 
             if(direction === 0) {
-                that.data.ups = that.data.origUps
-                that.data.downs = that.data.origDowns
-                that.data.score = that.data.origScore
+                that.data.ups = that.priv.origUps
+                that.data.downs = that.priv.origDowns
+                that.data.score = that.priv.origScore
                 that.data.likes = null
             } else if(direction === 1) {
-                that.data.ups = that.data.origUps + 1
-                that.data.downs = that.data.origDowns
-                that.data.score = that.data.origScore + 1
+                that.data.ups = that.priv.origUps + 1
+                that.data.downs = that.priv.origDowns
+                that.data.score = that.priv.origScore + 1
                 that.data.likes = true
             } else if(direction === -1) {
-                that.data.ups = that.data.origUps
-                that.data.downs = that.data.origDowns + 1
-                that.data.score = that.data.origScore - 1
+                that.data.ups = that.priv.origUps
+                that.data.downs = that.priv.origDowns + 1
+                that.data.score = that.priv.origScore - 1
                 that.data.likes = false
             }
 
-            that.data.voteLoading = false;
-            that.data.voteLoadingDir = that.data.likes;
+            that.priv.likesLoading = false;
+            that.priv.likesLocal = that.data.likes;
             voteConnObj.success()
         })
         return voteConnObj
