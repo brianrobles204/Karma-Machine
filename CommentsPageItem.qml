@@ -192,7 +192,11 @@ Column {
         id: setPostTimer
         property var postObj
         interval: 1
-        onTriggered: activePostObj = postObj
+        onTriggered: {
+            //The stickied property is not always preserved on updates
+            postObj.data.stickied = activePostObj.data.stickied
+            activePostObj = postObj
+        }
     }
 
     Connections {
