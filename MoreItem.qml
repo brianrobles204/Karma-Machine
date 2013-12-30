@@ -28,6 +28,27 @@ Rectangle {
     color: isLevelOdd ? primaryColor : altColor
     radius: units.gu(0.6)
 
+    Emblem {
+        id: moreEmblem
+        icon: "more"
+        opacity: rectangle.enabled ? 1 : 0.7
+        anchors {
+            verticalCenter: label.verticalCenter
+            left: parent.left
+            leftMargin: rectangle.padding
+        }
+
+        NumberAnimation on rotation {
+            running: !rectangle.enabled && moreEmblem.opacity !== 0
+            from: 0; to: 360
+            loops: Animation.Infinite
+            easing.type: Easing.Linear
+            duration: UbuntuAnimation.SleepyDuration
+        }
+
+        Behavior on opacity { UbuntuNumberAnimation{} }
+    }
+
     Label {
         id: label
         text: moreObj ?
@@ -44,22 +65,11 @@ Rectangle {
         anchors {
             top: parent.top
             topMargin: rectangle.padding
-            left: parent.left
-            leftMargin: rectangle.padding
+            left: moreEmblem.right
+            leftMargin: rectangle.padding * 0.5
         }
-    }
 
-    ActivityIndicator {
-        id: activityIndicator
-        visible: !rectangle.enabled
-        height: label.height; width: height
-        anchors {
-            top: parent.top
-            topMargin: rectangle.padding
-            left: label.right
-            leftMargin: rectangle.padding * 2
-        }
-        running: visible
+        Behavior on opacity { UbuntuNumberAnimation{} }
     }
 
     MouseArea {
