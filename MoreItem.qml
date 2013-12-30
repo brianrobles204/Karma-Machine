@@ -67,7 +67,7 @@ Rectangle {
         anchors.fill: parent
         onClicked: {
             rectangle.enabled = false
-            var moreConnObj = rectangle.moreObj.getMoreComments()
+            var moreConnObj = rectangle.moreObj.getMoreComments(settingsHandler.commentsSort)
             moreConnObj.onSuccess.connect(function(){
                 rectangle.destroyItem()
                 for (var i = 0; i < moreConnObj.response.length; i++) {
