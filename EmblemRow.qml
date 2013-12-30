@@ -22,7 +22,7 @@ Row {
         rightMargin: animate ? !empty ? padding : 0 : padding
     }
     height: animate ? !empty ? childrenRect.height : 0 : childrenRect.height
-    spacing: units.gu(0.5)
+    spacing: units.gu(0.6)
 
     add: Transition {
         UbuntuNumberAnimation { property: "scale"; from: 0; to: 1 }
@@ -33,6 +33,19 @@ Row {
     Emblem {
         icon: "edited"
         visible: thingObj === undefined || thingObj.data.edited
+    }
+
+    Emblem {
+        icon: "gilded"
+        visible: thingObj === undefined || ( thingObj.data.hasOwnProperty("gilded") && thingObj.data.gilded )
+
+        Label {
+            anchors { bottom: parent.bottom; bottomMargin: -units.gu(0.25); right: parent.right }
+            text: thingObj !== undefined && thingObj.data.hasOwnProperty("gilded") ? thingObj.data.gilded > 1 ? thingObj.data.gilded : "" : 0
+            fontSize: "x-small"
+            font.bold: true
+            color: "#877332"
+        }
     }
 
     Emblem {

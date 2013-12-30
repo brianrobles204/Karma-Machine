@@ -14,7 +14,7 @@
    id="svg2"
    version="1.1"
    inkscape:version="0.48.3.1 r9886"
-   sodipodi:docname="upvote.svg">
+   sodipodi:docname="downvote.svg">
   <defs
      id="defs4">
     <inkscape:perspective
@@ -33,8 +33,8 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="2.8"
-     inkscape:cx="-79.642857"
-     inkscape:cy="34.285714"
+     inkscape:cx="7.6785716"
+     inkscape:cy="5.7142854"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -51,7 +51,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -62,7 +62,7 @@
      transform="translate(0,-992.36218)">
     <path
        style="fill:#9494ff;fill-opacity:1;stroke:none"
-       d="m 30,1047.3622 -30,-35 17,0 0,-15.00002 26,0 0,15.00002 17,0 z"
+       d="m 30,1043.8622 -25.8,-30.1 14.62,0 0,-12.9 22.36,0 0,12.9 14.62,0 z"
        id="path3825"
        inkscape:connector-curvature="0"
        sodipodi:nodetypes="cccccccc" />
