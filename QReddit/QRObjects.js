@@ -119,7 +119,6 @@ var BaseReddit = function() {
         var request = new XMLHttpRequest();
         var connObj = createObject("ConnectionObject.qml");
         var timeout = 30000;
-        console.log(url);
 
         var timer = createTimer(timeout);
         timer.onTriggered.connect(function(){
@@ -147,14 +146,16 @@ var BaseReddit = function() {
                 }
                 if (request.status == 200) {
                     var response = JSON.parse(request.responseText);
-                    connObj.connectionSuccess(response);
+                    connObj.connection(response);
                 } else {
                     connObj.error("Could not connect to Reddit.");
                 }
             }
         }
 
+        console.log(url);
         request.send();
+
         return connObj;
     }
 
@@ -283,7 +284,7 @@ var SubredditObj = function (reddit, srName) {
         var connSubrObj = reddit.getAPIConnection(apiCommand, paramObj);
         var that = this;
 
-        connSubrObj.onConnectionSuccess.connect(function(response){
+        connSubrObj.onConnection.connect(function(response){
             that.data = response.data;
             var postObjArray = getPostObjArray(response.data.children)
             that.data.children = postObjArray;
@@ -309,7 +310,7 @@ var SubredditObj = function (reddit, srName) {
         var connMoreObj = reddit.getAPIConnection(this.currentCommand, paramObj);
         var that = this;
 
-        connMoreObj.onConnectionSuccess.connect(function(response){
+        connMoreObj.onConnection.connect(function(response){
             var postObjArray = getPostObjArray(response.data.children)
             that.data.children.push(postObjArray);
             that.data.after = response.data.after;
@@ -344,7 +345,7 @@ var BaseThing = function(reddit, thing) {
                                                          thing_id: this.data.name
                                                      });
         var that = this;
-        commentConnObj.onConnectionSuccess.connect(function(response){
+        commentConnObj.onConnection.connect(function(response){
             if(response.json.data) {
                 if(that.data.hasOwnProperty('num_comments')) that.data.num_comments += 1
                 if (that.toString() === "[object CommentObject]" || that.toString() === "[object PostObject]") {
@@ -416,7 +417,7 @@ var ThingObj = function(reddit, thing) {
         }
 
         var that = this;
-        voteConnObj.onConnectionSuccess.connect(function(response){
+        voteConnObj.onConnection.connect(function(response){
 
             if(direction === 0) {
                 that.data.ups = that.priv.origUps
@@ -499,7 +500,7 @@ var PostObj = function(reddit, post) {
 
         var commentsConnObj = reddit.getAPIConnection(apiCommand, paramObj);
         var that = this;
-        commentsConnObj.onConnectionSuccess.connect(function(response){
+        commentsConnObj.onConnection.connect(function(response){
             var commentsResponse = [];
             commentsResponse.push( new PostObj(reddit, response[0].data.children[0]) );
             commentsResponse.push( getTranslatedObjs(reddit, response[1].data.children, that.data.name) );
@@ -518,7 +519,7 @@ var PostObj = function(reddit, post) {
 
         var commentsConnObj = reddit.getAPIConnection(apiCommand, paramObj);
         var that = this;
-        commentsConnObj.onConnectionSuccess.connect(function(response){
+        commentsConnObj.onConnection.connect(function(response){
             var commentObjs = getTranslatedObjs(reddit, response[1].data.children, that.data.name);
             commentsConnObj.response = commentObjs;
             commentsConnObj.success();
@@ -560,7 +561,7 @@ var MoreObj = function(reddit, thing, link) {
 
         var moreConnObj = reddit.getAPIConnection('morechildren', paramObj);
         var that = this;
-        moreConnObj.onConnectionSuccess.connect(function(response){
+        moreConnObj.onConnection.connect(function(response){
             //The returned response is flat. Here we turn it into a tree before translating.
             var flatResponses = response.json.data.things;
             var nodeList = {};

@@ -90,7 +90,7 @@ Item {
             }
 
             function loadParamObj(sort, paramObj, force) {
-                if(sort === _sort && (paramObj.t || "" === _time) && !force) return true
+                if(sort === _sort && (paramObj.t || "") === _time && !force) return true
                 _loadSubredditListing(subreddit, sort, paramObj)
             }
 

@@ -38,6 +38,9 @@ Item {
 
     UbuntuShape {
         id: postIcon
+
+        property bool hasThumbnail: postObj !== undefined && postObj.data.thumbnail !== "self" && postObj.data.thumbnail !== "default" && postObj.data.thumbnail !== "nsfw"
+
         color: "#2e0020"
         anchors{
             top: parent.top
@@ -48,10 +51,10 @@ Item {
         width: visible ? units.gu(6) : 0
         height: units.gu(6)
         image: Image {
-            source: postObj && postObj.data.thumbnail !== "self" && postObj.data.thumbnail !== "default" ? postObj.data.thumbnail : ""
+            source: postIcon.hasThumbnail ? postObj.data.thumbnail : ""
             fillMode: Image.PreserveAspectCrop
         }
-        visible: postObj ? (postObj.data.thumbnail !== "self" && postObj.data.thumbnail !== "default" && postObj.data.thumbnail !== "") : false
+        visible: hasThumbnail
     }
 
     Column {

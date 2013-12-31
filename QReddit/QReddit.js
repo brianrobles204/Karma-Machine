@@ -123,7 +123,7 @@ var QReddit = function(userAgent, applicationName) {
                                                                     user: username,
                                                                     passwd: passwd
                                                                 });
-                    apiLoginConnObj.onConnectionSuccess.connect(loginConnObj.connectionSuccess);
+                    apiLoginConnObj.onConnection.connect(loginConnObj.connection);
                     apiLoginConnObj.onSuccess.connect(loginConnObj.success);
                     apiLoginConnObj.onRaiseRetry.connect(loginConnObj.raiseRetry);
                     apiLoginConnObj.onError.connect(loginConnObj.error);
@@ -136,7 +136,7 @@ var QReddit = function(userAgent, applicationName) {
                                                      });
             }
 
-            loginConnObj.onConnectionSuccess.connect(function (response){
+            loginConnObj.onConnection.connect(function (response){
                 try {
                     checkLoginError(response);
                     if(callback !== undefined) callback();
@@ -222,7 +222,7 @@ var QReddit = function(userAgent, applicationName) {
                                                              after: after,
                                                              limit: 100
                                                          });
-                subsrConnObj.onConnectionSuccess.connect(function(response){
+                subsrConnObj.onConnection.connect(function(response){
                     var subsrArray = parseListing(response.data.children);
                     if(typeof response.data.after === "string") {
                         var updConnObj = updateMoreSubscribed(response.data.after);
@@ -247,7 +247,7 @@ var QReddit = function(userAgent, applicationName) {
 
             that.notifier.subscribedLoading = true
 
-            subsrConnObj.onConnectionSuccess.connect(function(response){
+            subsrConnObj.onConnection.connect(function(response){
                 var subsrArray = parseListing(response.data.children);
 
                 if(typeof response.data.after === "string" && isAUser) {
@@ -395,7 +395,7 @@ var QReddit = function(userAgent, applicationName) {
             userError = error;
         }
 
-        var loginConnObj = that._loginUser(username, password, function() {
+        var loginConnObj = this._loginUser(username, password, function() {
             that._setActiveUser(username);
         });
 
