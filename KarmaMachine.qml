@@ -481,6 +481,9 @@ MainView {
         var loginConnObj = redditObj.loginActiveUser()
         loginConnObj.onSuccess.connect(function(){
             frontPageItem.reloadPage()
+            if(redditObj.getSubscribedArray().length === 1) {
+                redditObj.updateSubscribedArray()
+            }
         })
 
         var component = Qt.createComponent("HeaderArea.qml")

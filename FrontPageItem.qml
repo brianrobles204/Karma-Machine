@@ -410,9 +410,7 @@ Item {
                                             bottom: parent.bottom
                                         }
                                         width: units.gu(6)
-                                        onClicked: {
-                                            var subsrConnObj = redditObj.updateSubscribedArray()
-                                        }
+                                        onClicked: redditObj.updateSubscribedArray()
                                     }
                                     Image {
                                         source: "media/ui/refresh.svg"
@@ -760,7 +758,7 @@ Item {
                                  var loginConnObj = redditObj.loginNewUser(usernameTextField.text, passwordTextField.text)
                                  loginConnObj.onSuccess.connect(function(){
                                      redditObj.updateSubscribedArray()
-                                     postList.loadSubreddit()
+                                     postList.loadSubreddit("", true)
                                      PopupUtils.close(userAddDialog)
                                  })
                                  loginConnObj.onError.connect(function(errorMessage){

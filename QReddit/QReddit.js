@@ -265,7 +265,6 @@ var QReddit = function(userAgent, applicationName) {
                 }
             });
             subsrConnObj.onSuccess.connect(function(){
-                that.notifier.subscribedLoading = false
                 var dbTransaction = getDatabaseTransaction('UPDATE RedditUsers SET subscribed=? WHERE username=?;',
                                                            [subsrConnObj.response, username]);
                 if (dbTransaction.rowsAffected > 0){
@@ -273,6 +272,7 @@ var QReddit = function(userAgent, applicationName) {
                 } else {
                     throw "Error: _setActiveUser(): Transaction failed.";
                 }
+                that.notifier.subscribedLoading = false
             });
 
             return subsrConnObj;
@@ -363,7 +363,7 @@ var QReddit = function(userAgent, applicationName) {
         var noLoginConnObj = createObject("ConnectionObject.qml");
         console.log("Log: No user is logged in.");
         this.notifier.authStatus = 'none';
-        that.notifier.subscribedLoading = false;
+        this.notifier.subscribedLoading = false;
 
         var noLoginTimer = createTimer(1);
         noLoginTimer.onTriggered.connect(function() {
@@ -415,10 +415,10 @@ var QReddit = function(userAgent, applicationName) {
             logoutConnObj.success();
         });
         logoutConnObj.onSuccess.connect(function(){
-            if(!loadingAuth) that.notifier.authStatus = 'none';
-            that.notifier.subscribedLoading = false;
             that.notifier.currentAuthUser = "";
             that._setActiveUser("");
+            if(!loadingAuth) that.notifier.authStatus = 'none';
+            that.notifier.subscribedLoading = false;
         });
 
         return logoutConnObj;
