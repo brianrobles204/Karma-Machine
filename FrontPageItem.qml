@@ -380,7 +380,7 @@ Item {
                                     ToolbarButton {
                                         property bool custom: redditObj.getSubscribedArray().indexOf(postList.subreddit) !== -1 || postList.subreddit === "" || postList.subreddit === "All"
 
-                                        iconSource: "media/ui/refresh.svg"
+                                        iconSource: "media/ui/user.svg"
                                         text: custom ? "Custom…" : "<b>Custom…</b>"
                                         enabled: redditNotifier.authStatus !== "loading"
 
