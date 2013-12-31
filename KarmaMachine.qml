@@ -29,6 +29,8 @@ MainView {
     property var redditNotifier: redditObj.notifier
     property var activePostObj
 
+    readonly property var history: settingsHandler.history.split(",")
+
     signal resetPostObj
 
     function togglePostPageItem() {

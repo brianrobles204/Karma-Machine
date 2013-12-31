@@ -5,13 +5,13 @@ SwipeBox{
     id: swipeBox
 
     property var postObj
+    property bool read: false
 
     property color primaryColor: "#f2f2f2"
     property color selectedColor: "#ffeaae"
     property color readColor: "#eaeaea"
 
     readonly property bool selected: activePostObj ? postObj.data.name === activePostObj.data.name : false
-    readonly property bool read: settingsHandler.history.split(",").indexOf(postObj.data.name) !== -1
 
     signal commentsTriggered
 
@@ -22,11 +22,13 @@ SwipeBox{
     height: headerAdditionHolder.height + postBox.height + units.dp(1)
 
     onClicked: {
+        read = true
         window.resetPostObj()
         openPostContent(postObj)
         onActivePostObjChanged.connect(updatePostObj)
     }
     onCommentsTriggered: {
+        read = true
         window.resetPostObj()
         openPostContent(postObj, true)
         onActivePostObjChanged.connect(updatePostObj)
@@ -108,7 +110,7 @@ SwipeBox{
     }
 
     Rectangle{
-        anchors.fill: parent
+        anchors.fill: postBox
         z: -1
         color: !swipeBox.selected ? !swipeBox.read ? primaryColor : readColor : selectedColor
     }

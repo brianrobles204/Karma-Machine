@@ -32,26 +32,15 @@ SwipeBox{
         }
     }
 
-//    Rectangle {
-//        property real size: units.gu(1)
-//        property string vote: swipeBox.vote
-//        anchors {
-//            top: parent.top
-//            right: parent.right
-//            topMargin: units.gu(1)
-//            rightMargin: units.gu(1)
-//        }
-//        width: size
-//        height: size
-//        radius: size/2
-//        color: vote == "up" ? "#FF8B60" : "#9494FF"
-//        visible: vote == "up" || vote == "down"
-//        z: 100
-//    }
-
     PostLayout {
         id: descHeader
         postObj: swipeBox.postObj
+    }
+    Rectangle {
+        id: descHeaderBG
+        anchors.fill: descHeader
+        color: "#f2f2f2"
+        z: -1
     }
     Rectangle {
         id: divider
@@ -94,12 +83,11 @@ SwipeBox{
             color: UbuntuColors.coolGrey
             onLinkActivated: openPostContent(link)
         }
-    }
-
-    Rectangle {
-        id: descContentBG
-        anchors.fill: parent
-        color: "#f2f2f2"
-        z: -1
+        Rectangle {
+            id: descContentBG
+            anchors.fill: parent
+            color: "#f2f2f2"
+            z: -1
+        }
     }
 }

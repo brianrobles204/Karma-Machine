@@ -53,8 +53,9 @@ Item {
             function _appendPosts(postsArray) {
                 //Generate stuff here
                 for (var i = 0; i < postsArray.length; i++) {
+                    var isRead = history.indexOf(postsArray[i].data.name) !== -1
                     var component = Qt.createComponent("PostItem.qml")
-                    var postItem = component.createObject(postList, {"postObj": postsArray[i], "clip": true})
+                    var postItem = component.createObject(postList, {"postObj": postsArray[i], "clip": true, "read": isRead})
                     if (postItem == null) {
                         console.log("Error creating object")
                     }
