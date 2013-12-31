@@ -28,6 +28,10 @@ Item {
             webSection.open(content)
         } else if (content.toString() === "[object PostObject]") {
             //content is a postObj
+            if(settingsHandler.history.split(",").indexOf(content.data.name) == -1) {
+                settingsHandler.history += "," + content.data.name
+            }
+
             if(content.data.is_self || forceComments) {
                 commentsSection.show()
                 if(postObj && content.data.name === postObj.data.name) return

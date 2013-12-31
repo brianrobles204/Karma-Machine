@@ -94,11 +94,12 @@ SwipeBox{
             color: UbuntuColors.coolGrey
             onLinkActivated: openPostContent(link)
         }
-        Rectangle {
-            id: descContentBG
-            anchors.fill: parent
-            color: "#f2f2f2"
-            z: -1
-        }
+    }
+
+    Rectangle {
+        id: descContentBG
+        anchors.fill: parent
+        color: "#f2f2f2"
+        z: -1
     }
 }

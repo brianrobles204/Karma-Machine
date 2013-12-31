@@ -8,11 +8,7 @@ Item {
 
     property var postObj
     property real spacingConstant: units.gu(1.25)
-    property bool selected
     readonly property bool stickied: postObj ? postObj.data.stickied : false
-
-    property color primaryColor: "#f2f2f2"
-    property color selectedColor: "#ffeaae"
 
     signal commentsTriggered
 
@@ -20,12 +16,6 @@ Item {
     anchors{
         left: parent.left
         right: parent.right
-    }
-
-    Rectangle{
-        anchors.fill: parent
-        z: -1
-        color: !postRow.selected ? primaryColor : selectedColor
     }
 
     EmblemRow {

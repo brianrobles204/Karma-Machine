@@ -6,7 +6,12 @@ SwipeBox{
 
     property var postObj
 
+    property color primaryColor: "#f2f2f2"
+    property color selectedColor: "#ffeaae"
+    property color readColor: "#eaeaea"
+
     readonly property bool selected: activePostObj ? postObj.data.name === activePostObj.data.name : false
+    readonly property bool read: settingsHandler.history.split(",").indexOf(postObj.data.name) !== -1
 
     signal commentsTriggered
 
@@ -97,10 +102,15 @@ SwipeBox{
     PostLayout {
         id: postBox
         anchors.top: headerAdditionHolder.bottom
-        selected: swipeBox.selected
         postObj: swipeBox.postObj
 
         onCommentsTriggered: swipeBox.commentsTriggered()
+    }
+
+    Rectangle{
+        anchors.fill: parent
+        z: -1
+        color: !swipeBox.selected ? !swipeBox.read ? primaryColor : readColor : selectedColor
     }
 
     function giveSpace() {

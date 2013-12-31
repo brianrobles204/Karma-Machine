@@ -382,8 +382,16 @@ MainView {
 
     /*
       To extend, simply add your new setting as a string to settingsArray, then
-      add a new property of the same name to settingsHandler. Refer to below.
+      add a new property of the same name to settingsHandler itself. Refer to below.
       settingsHandler will take care of the rest for you.
+
+      ...
+      property var settingsArray: [
+          ...,
++         'newSetting'
+      ]
+      ...
++     property string newSetting: "value"
 
       To use, you can read by using settingsHandler.SETTING,
       and write using settingsHandler.SETTING = VALUE.
@@ -395,9 +403,11 @@ MainView {
         property var settingsArray: [
             'commentsSort',
             'firstTime',
+            'history'
         ]
         property string commentsSort: "confidence"
         property bool firstTime: true
+        property string history: ""
 
         function _getDatabase() {
             return LocalStorage.openDatabaseSync("karma-machine", "1.0", "User Storage Database", 1000000);
