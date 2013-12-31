@@ -46,6 +46,7 @@ Item {
             property string _sort: "hot"
             property string _time: ""
 
+            property var activeConnObj: undefined
             property var subredditObj
             property bool loading
 
@@ -61,6 +62,11 @@ Item {
             }
 
             function _loadSubredditListing(srName, sort, paramObj) {
+                if(activeConnObj !== undefined) {
+                    activeConnObj.abort()
+                    activeConnObj = undefined
+                }
+
                 _sort = sort
                 _time = paramObj.t || ""
                 clearListing()
@@ -78,7 +84,10 @@ Item {
                 subrConnObj.onSuccess.connect(function(response){
                     _appendPosts(subrConnObj.response)
                     loading = false
+                    activeConnObj = undefined
                 })
+
+                activeConnObj = subrConnObj
             }
 
             function loadSubreddit(srName, force) {
@@ -346,6 +355,7 @@ Item {
                                     ToolbarButton {
                                         iconSource: "media/noSignal.png"
                                         text: postList.subreddit !== "" ? "Frontpage" : "<b>Frontpage</b>"
+                                        enabled: redditNotifier.authStatus !== "loading"
                                         MouseArea {
                                             anchors.fill: parent
                                             onClicked: {
@@ -357,6 +367,7 @@ Item {
                                     ToolbarButton {
                                         iconSource: "media/ui/comments.svg"
                                         text: postList.subreddit !== "All" ? "All" : "<b>All</b>"
+                                        enabled: redditNotifier.authStatus !== "loading"
                                         MouseArea {
                                             anchors.fill: parent
                                             onClicked: {
@@ -370,6 +381,7 @@ Item {
 
                                         iconSource: "media/ui/refresh.svg"
                                         text: custom ? "Custom…" : "<b>Custom…</b>"
+                                        enabled: redditNotifier.authStatus !== "loading"
 
                                         MouseArea {
                                             anchors.fill: parent
@@ -382,6 +394,7 @@ Item {
                                     /*ToolbarButton {
                                         iconSource: "media/user.png" //icon could be binoculars
                                         text: "Explore"
+                                        enabled: redditNotifier.authStatus !== "loading"
                                     }*/
                                 }
                                 ListItems.ThinDivider {}

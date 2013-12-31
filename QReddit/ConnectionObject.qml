@@ -5,7 +5,7 @@ QtObject {
     property string errorMessage: ""
     property var response
 
-    signal connection(variant response) //called when the connection is successful
+    signal connection(var response) //called when the connection is successful
     signal success() //called when the connection is successful and reddit.com returned no input errors
     signal raiseRetry() //called when the server is taking too long to respond and appropriate action may need to be taken
     signal error(string error)

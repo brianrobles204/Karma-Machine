@@ -122,6 +122,7 @@ Column {
         id: commentsRepeater
 
         property var postObj: activePostObj
+        property var activeConnObj: undefined
         property bool loading: true
         property var activeCommentObj: []
 
@@ -131,6 +132,11 @@ Column {
         }
 
         function loadComments() {
+            if(activeConnObj !== undefined) {
+                activeConnObj.abort()
+                activeConnObj = undefined
+            }
+
             commentsListModel.clear()
             loading = true
             activeCommentObj = []
@@ -145,7 +151,10 @@ Column {
                 }
                 setPostTimer.postObj = commentsConnObj.response[0]
                 setPostTimer.restart()
+                activeConnObj = undefined
             });
+
+            activeConnObj = commentsConnObj
         }
 
         function appendReply(replyObj) {
