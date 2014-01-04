@@ -312,7 +312,7 @@ var SubredditObj = function (reddit, srName) {
 
         connMoreObj.onConnection.connect(function(response){
             var postObjArray = getPostObjArray(response.data.children)
-            that.data.children.push(postObjArray);
+            that.data.children = that.data.children.concat(postObjArray);
             that.data.after = response.data.after;
             connMoreObj.response = postObjArray;
             connMoreObj.success();

@@ -10,141 +10,128 @@ Item {
     id: frontPageItem
 
     property var header
-    property var flickable: postFlickable
-    property string title: (headerAddition.isOpen && header.flickable == postFlickable) ? "Karma Machine" : postList.subreddit == "" ? "FrontPage" : postList.subreddit
+    property var flickable: feedView
+    property string title: (headerAddition.isOpen && header.flickable == feedView) ? "Karma Machine" : feedView.subreddit == "" ? "FrontPage" : feedView.subreddit
 
     function toggleHeaderAddition() {
         headerAddition.isOpen = !headerAddition.isOpen
     }
 
     function reloadPage() {
-        postList.loadSubreddit(postList.subreddit, true)
+        feedView.loadSubreddit(feedView.subreddit, true)
     }
 
-    Flickable {
-        id: postFlickable
-        anchors.fill: parent
-        contentHeight: postList.height
+    ListView {
+        id: feedView
         property int prevContY: 0
         property bool contYHasBeenSet: false
 
+        readonly property string subreddit: subredditObj ? subredditObj.srName : ""
+        readonly property bool containsPosts: count > 0//children.length > 1
+        property string _sort: "hot"
+        property string _time: ""
+
+        property var activeConnObj: undefined
+        property var subredditObj
+        property bool loading
+
+        function _appendPosts(feed) {
+            //Generate stuff here
+            for (var i = 0; i < feed.length; i++) {
+                feedModel.append({countNo: feedModel.count})
+            }
+        }
+
+        function _loadSubredditListing(srName, sort, paramObj) {
+            if(activeConnObj !== undefined) {
+                activeConnObj.abort()
+                activeConnObj = undefined
+            }
+
+            _sort = sort
+            _time = paramObj.t || ""
+            clearListing()
+            loading = true
+
+            var metaSubredditObj
+            if (subredditObj && subreddit === srName) {
+                metaSubredditObj = subredditObj
+            } else {
+                metaSubredditObj = subredditObj = redditObj.getSubredditObj(srName || "")
+            }
+
+            paramObj = paramObj || {}
+            var subrConnObj = metaSubredditObj.getPostsListing(sort || 'hot', paramObj)
+            subrConnObj.onSuccess.connect(function(response){
+                _appendPosts(subrConnObj.response)
+                loading = false
+                activeConnObj = undefined
+            })
+
+            activeConnObj = subrConnObj
+        }
+
+        function loadSubreddit(srName, force) {
+            srName = srName || ""
+            if(srName === subreddit && containsPosts && !force) return true
+            var paramObj = {}
+            if (_time !== "") paramObj.t = _time
+            _loadSubredditListing(srName, _sort, paramObj)
+        }
+
+        function loadParamObj(sort, paramObj, force) {
+            if(sort === _sort && (paramObj.t || "") === _time && !force) return true
+            _loadSubredditListing(subreddit, sort, paramObj)
+        }
+
+        function clearListing() {
+            activePostObj = undefined
+            headerAddition.isOpen = false
+            feedModel.clear()
+            footerItem.visible = false
+
+            feedView.contentY = -frontPageItem.header.height - 1
+            headerAddition.isOpen = true
+        }
+
+        function loadMore() {
+            var moreConnObj = subredditObj.getMoreListing()
+            moreConnObj.onSuccess.connect(function(){
+                if(moreLoaderItem.spaceRect) {
+                    footerItem.visible = false
+                }
+                moreImage.visible = true
+                feedView._appendPosts(moreConnObj.response)
+            })
+        }
+
+        header: Item {
+            property bool isOpen
+
+            function giveSpace() { isOpen = true; height = units.gu(12) }
+            function hideSpace() { isOpen = false; height = 0 }
+
+            width: 1; height: 0
+
+            Behavior on height {UbuntuNumberAnimation{}}
+        }
+
+        model: ListModel { id: feedModel }
+        delegate: PostItem { postObj: feedView.subredditObj.data.children[countNo]; clip: true }
+
+        footer: Item {
+            width: 1
+            height: moreLoaderItem.loadMoreLength
+        }
+
+        anchors.fill: parent
         //To prevent the page from resetting the contentY when its flickables are changed
         onContentYChanged: {
-            if(contentY !== -header.height || !contYHasBeenSet) {
+            if(contentY !== -frontPageItem.header.height || !contYHasBeenSet) {
                 if(atYBeginning) contYHasBeenSet = true
                 prevContY = contentY
             } else {
                 contentY = prevContY
-            }
-        }
-
-        Column {
-            id: postList
-
-            readonly property string subreddit: subredditObj ? subredditObj.srName : ""
-            readonly property bool containsPosts: children.length > 1
-            property string _sort: "hot"
-            property string _time: ""
-
-            property var activeConnObj: undefined
-            property var subredditObj
-            property bool loading
-
-            function _appendPosts(postsArray) {
-                //Generate stuff here
-                for (var i = 0; i < postsArray.length; i++) {
-                    var isRead = history.indexOf(postsArray[i].data.name) !== -1
-                    var component = Qt.createComponent("PostItem.qml")
-                    var postItem = component.createObject(postList, {"postObj": postsArray[i], "clip": true, "read": isRead})
-                    if (postItem == null) {
-                        console.log("Error creating object")
-                    }
-                }
-            }
-
-            function _loadSubredditListing(srName, sort, paramObj) {
-                if(activeConnObj !== undefined) {
-                    activeConnObj.abort()
-                    activeConnObj = undefined
-                }
-
-                _sort = sort
-                _time = paramObj.t || ""
-                clearListing()
-                loading = true
-
-                var metaSubredditObj
-                if (subredditObj && subreddit === srName) {
-                    metaSubredditObj = subredditObj
-                } else {
-                    metaSubredditObj = subredditObj = redditObj.getSubredditObj(srName || "")
-                }
-
-                paramObj = paramObj || {}
-                var subrConnObj = metaSubredditObj.getPostsListing(sort || 'hot', paramObj)
-                subrConnObj.onSuccess.connect(function(response){
-                    _appendPosts(subrConnObj.response)
-                    loading = false
-                    activeConnObj = undefined
-                })
-
-                activeConnObj = subrConnObj
-            }
-
-            function loadSubreddit(srName, force) {
-                srName = srName || ""
-                if(srName === subreddit && containsPosts && !force) return true
-                var paramObj = {}
-                if (_time !== "") paramObj.t = _time
-                _loadSubredditListing(srName, _sort, paramObj)
-            }
-
-            function loadParamObj(sort, paramObj, force) {
-                if(sort === _sort && (paramObj.t || "") === _time && !force) return true
-                _loadSubredditListing(subreddit, sort, paramObj)
-            }
-
-            function clearListing() {
-                activePostObj = undefined
-                headerAddition.isOpen = false
-
-                if(containsPosts) {
-                    for (var i = 0; i < children.length; i++) {
-                        if(children[i] !== headerAdditionRect) children[i].destroy()
-                    }
-                }
-                moreLoaderItem.spaceRect = null
-
-                postFlickable.contentY = -frontPageItem.header.height - 1
-                headerAddition.isOpen = true
-            }
-
-            function loadMore() {
-                var moreConnObj = subredditObj.getMoreListing()
-                moreConnObj.onSuccess.connect(function(){
-                    if(moreLoaderItem.spaceRect != null) {
-                        moreLoaderItem.spaceRect.destroy()
-                        moreLoaderItem.spaceRect = null
-                    }
-                    moreImage.visible = true
-                    postList._appendPosts(moreConnObj.response)
-                })
-            }
-
-            anchors.top: parent.top
-            anchors.left: parent.left
-            anchors.right: parent.right
-
-            Item {
-                id: headerAdditionRect
-                property bool isOpen
-
-                function giveSpace() { isOpen = true; height = units.gu(12) }
-                function hideSpace() { isOpen = false; height = 0 }
-
-                width: 1; height: 0
-
-                Behavior on height {UbuntuNumberAnimation{}}
             }
         }
     }
@@ -161,13 +148,13 @@ Item {
         property real prevContentY: 0
 
         Connections {
-            target: postFlickable
+            target: feedView
             onContentYChanged: {
-                if(postFlickable.contentY <= -frontPageItem.header.height){
+                if(feedView.contentY <= -frontPageItem.header.height){
                     headerAddition.isOpen = true
                 } else {
-                    if(frontPageItem.header.flickable !== postFlickable && !headerAddition.isOpen) {
-                        var deltaContentY = postFlickable.contentY - headerAddition.prevContentY
+                    if(frontPageItem.header.flickable !== feedView && !headerAddition.isOpen) {
+                        var deltaContentY = feedView.contentY - headerAddition.prevContentY
                         headerAddition.prevContentY = flickable.contentY
                         headerAddition.y = MiscUtils.clamp(headerAddition.y - deltaContentY, frontPageItem.header.height -units.gu(5.5), frontPageItem.header.height + units.gu(1))
                     }
@@ -175,7 +162,7 @@ Item {
                 }
             }
             onMovementEnded: {
-                if(frontPageItem.header.flickable !== postFlickable && !headerAddition.isOpen) {
+                if(frontPageItem.header.flickable !== feedView && !headerAddition.isOpen) {
                     headerAddition.enableBehavior = true
                     if (headerAddition.y < frontPageItem.header.height - (headerAddition.height + units.gu(1))/2) headerAddition.y = frontPageItem.header.height -units.gu(5.5)
                     else headerAddition.y = frontPageItem.header.height + units.gu(1)
@@ -190,7 +177,7 @@ Item {
                 PropertyChanges {
                     target: headerAddition
                     x: units.gu(1)
-                    y: targetPostItem.y - postFlickable.contentY + units.gu(1)
+                    y: targetPostItem.y - feedView.contentY + units.gu(1)
                     width: parent.width - units.gu(2)
                     height: units.gu(10)
                 }
@@ -224,11 +211,11 @@ Item {
                 enableBehavior = false
                 targetPostItem = null
             } else {
-                if(postFlickable.contentY <= -frontPageItem.header.height) {
-                    targetPostItem = postList.children[0]
+                if(feedView.contentY <= -frontPageItem.header.height) {
+                    targetPostItem = feedView.headerItem
                 } else {
-                    var beforePost = postList.childAt(1, postFlickable.contentY + frontPageItem.header.height)
-                    targetPostItem = postList.childAt(1, beforePost.y + beforePost.height + units.gu(0.2))
+                    var beforePost = feedView.itemAt(1, feedView.contentY + frontPageItem.header.height)
+                    targetPostItem = feedView.itemAt(1, beforePost.y + beforePost.height + units.gu(0.2))
                 }
                 targetPostItem.giveSpace()
                 enableBehavior = true
@@ -241,11 +228,11 @@ Item {
         Behavior on height {UbuntuNumberAnimation{}}
         Behavior on y {
             enabled: {
-                if(header.flickable === postFlickable) {
+                if(header.flickable === feedView) {
                     //we want some animation when the header is moving, so the changes don't seem so abrupt
-                    return !postList.children[0].isOpen
+                    return !feedView.headerItem.isOpen
                 } else {
-                    return headerAddition.enableBehavior && !postList.children[0].isOpen
+                    return headerAddition.enableBehavior && !feedView.headerItem.isOpen
                 }
             }
             UbuntuNumberAnimation{}
@@ -273,7 +260,7 @@ Item {
                     property bool pressed:subMouseArea.pressed
                     property ListModel model: !redditNotifier.subscribedLoading ? QRHelper.arrayToListModel(redditObj.getSubscribedArray()) : QRHelper.arrayToListModel([""])
 
-                    text: postList.subreddit == "" ? "Frontpage" : postList.subreddit
+                    text: feedView.subreddit == "" ? "Frontpage" : feedView.subreddit
                     anchors.left: parent.left
                     color: pressed ? UbuntuColors.orange : UbuntuColors.coolGrey
                     fontSize: "large"
@@ -328,7 +315,7 @@ Item {
                             Behavior on height { UbuntuNumberAnimation{ duration: UbuntuAnimation.SnapDuration } }
 
                             Component.onCompleted: {
-                                var index = redditObj.getSubscribedArray().indexOf(postList.subreddit)
+                                var index = redditObj.getSubscribedArray().indexOf(feedView.subreddit)
                                 if(index !== -1){
                                     positionViewAtIndex(index, ListView.Beginning)
                                 } else {
@@ -355,30 +342,30 @@ Item {
                                     spacing: units.gu(1)
                                     ToolbarButton {
                                         iconSource: "media/noSignal.png"
-                                        text: postList.subreddit !== "" ? "Frontpage" : "<b>Frontpage</b>"
+                                        text: feedView.subreddit !== "" ? "Frontpage" : "<b>Frontpage</b>"
                                         enabled: redditNotifier.authStatus !== "loading"
                                         MouseArea {
                                             anchors.fill: parent
                                             onClicked: {
                                                 PopupUtils.close(subredditPopover)
-                                                postList.loadSubreddit()
+                                                feedView.loadSubreddit()
                                             }
                                         }
                                     }
                                     ToolbarButton {
                                         iconSource: "media/ui/comments.svg"
-                                        text: postList.subreddit !== "All" ? "All" : "<b>All</b>"
+                                        text: feedView.subreddit !== "All" ? "All" : "<b>All</b>"
                                         enabled: redditNotifier.authStatus !== "loading"
                                         MouseArea {
                                             anchors.fill: parent
                                             onClicked: {
                                                 PopupUtils.close(subredditPopover)
-                                                postList.loadSubreddit("All")
+                                                feedView.loadSubreddit("All")
                                             }
                                         }
                                     }
                                     ToolbarButton {
-                                        property bool custom: redditObj.getSubscribedArray().indexOf(postList.subreddit) !== -1 || postList.subreddit === "" || postList.subreddit === "All"
+                                        property bool custom: redditObj.getSubscribedArray().indexOf(feedView.subreddit) !== -1 || feedView.subreddit === "" || feedView.subreddit === "All"
 
                                         iconSource: "media/ui/user.svg"
                                         text: custom ? "Custom…" : "<b>Custom…</b>"
@@ -449,12 +436,12 @@ Item {
                             model: subredditSwitcher.model
 
                             delegate: ListItems.Standard {
-                                text: model.name !== postList.subreddit ? model.name : "<b>" + model.name + "</b>"
+                                text: model.name !== feedView.subreddit ? model.name : "<b>" + model.name + "</b>"
                                 visible: model.name !== ""
                                 height: visible ? implicitHeight : 1
                                 onClicked: {
                                     PopupUtils.close(subredditPopover)
-                                    postList.loadSubreddit(model.name)
+                                    feedView.loadSubreddit(model.name)
                                 }
                             }
                         }
@@ -478,11 +465,11 @@ Item {
                              }
 
                              if(index !== -1) {
-                                 postList.loadSubreddit(subsrArray[i])
+                                 feedView.loadSubreddit(subsrArray[i])
                              } else {
                                  var lowerCaseName = name.toLowerCase()
                                  var firstToUpName = lowerCaseName.substr(0, 1).toUpperCase() + lowerCaseName.substr(1)
-                                 postList.loadSubreddit(firstToUpName)
+                                 feedView.loadSubreddit(firstToUpName)
                              }
 
                              PopupUtils.close(customSubRDialog)
@@ -593,7 +580,7 @@ Item {
                                         sortingSwitcher.text = name
                                         var paramObj = {}
                                         if (t !== "") paramObj.t = t
-                                        postList.loadParamObj(sort, paramObj);
+                                        feedView.loadParamObj(sort, paramObj);
                                     }
                                 }
                             }
@@ -680,12 +667,12 @@ Item {
                                             PopupUtils.close(userPopover)
                                             return true
                                         }
-                                        var postListing = postList //calling postList directly doesn't seem to work
-                                        postListing.clearListing()
+                                        var feedViewing = feedView //calling feedView directly doesn't seem to work
+                                        feedViewing.clearListing()
 
                                         var switchConnObj = redditObj.switchActiveUser(users[selectedIndex] || "")
                                         switchConnObj.onSuccess.connect(function(){
-                                            postListing.loadSubreddit()
+                                            feedViewing.loadSubreddit()
                                         })
 
                                         PopupUtils.close(userPopover)
@@ -725,14 +712,14 @@ Item {
                                     gradient: UbuntuColors.orangeGradient
                                     anchors.right: parent.right
                                     onClicked: {
-                                        var postListing = postList
+                                        var feedViewing = feedView
 
                                         var isActiveUser = redditObj.deleteUser(userDeleteDialog.user)
                                         if (isActiveUser) {
-                                            postListing.clearListing()
+                                            feedViewing.clearListing()
                                             var logoutConnObj = redditObj.logout()
                                             logoutConnObj.onSuccess.connect(function(){
-                                                postListing.loadSubreddit()
+                                                feedViewing.loadSubreddit()
                                             })
                                         }
 
@@ -758,7 +745,7 @@ Item {
                                  var loginConnObj = redditObj.loginNewUser(usernameTextField.text, passwordTextField.text)
                                  loginConnObj.onSuccess.connect(function(){
                                      redditObj.updateSubscribedArray()
-                                     postList.loadSubreddit("", true)
+                                     feedView.loadSubreddit("", true)
                                      PopupUtils.close(userAddDialog)
                                  })
                                  loginConnObj.onError.connect(function(errorMessage){
@@ -852,36 +839,37 @@ Item {
         anchors.centerIn: parent
         width: units.gu(5)
         height: units.gu(5)
-        running: postList.loading || redditNotifier.authStatus === 'loading'
+        running: feedView.loading || redditNotifier.authStatus === 'loading'
         z: -1
     }
 
     Item {
         id: moreLoaderItem
+
+        property real loadMoreLength: units.gu(16)
+        property real overflow: 0
+        property bool spaceRect: feedView.footerItem.visible
+
         anchors{
             bottom: parent.bottom
             bottomMargin: units.gu(2)
             horizontalCenter: parent.horizontalCenter
         }
         z: -1
-        visible: ((overflow > 0) && (postFlickable.contentHeight >= parent.height) || spaceRect != null)
+        visible: ((overflow > 0) && (feedView.contentHeight >= parent.height) || spaceRect)
         width: units.gu(5)
         height: units.gu(5)
 
-        property real loadMoreLength: units.gu(16)
-        property real overflow: 0
-        property variant spaceRect: null
-
         Connections {
-            target: postFlickable
+            target: feedView
 
             onContentYChanged: {
-                var pf = postFlickable
-                if(pf.atYEnd && !pf.atYBeginning && (postFlickable.contentHeight >= parent.height)) {
+                var pf = feedView
+                if(pf.atYEnd && !pf.atYBeginning && (feedView.contentHeight >= parent.height)) {
                     moreLoaderItem.overflow = pf.contentY - pf.contentHeight + pf.height
                     if ((moreLoaderItem.overflow > moreLoaderItem.loadMoreLength) && !moreLoaderItem.spaceRect) {
-                        moreLoaderItem.spaceRect = Qt.createQmlObject("import QtQuick 2.0; Item{width: 1; height: " + moreLoaderItem.loadMoreLength + "}", postList)
-                        postList.loadMore()
+                        feedView.footerItem.visible = true//moreLoaderItem.spaceRect = Qt.createQmlObject("import QtQuick 2.0; Item{width: 1; height: " + moreLoaderItem.loadMoreLength + "}", feedView)
+                        feedView.loadMore()
                         moreImage.visible = false
                     }
                 } else {
