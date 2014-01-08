@@ -152,7 +152,10 @@ Column {
                 setPostTimer.postObj = commentsConnObj.response[0]
                 setPostTimer.restart()
                 activeConnObj = undefined
-            });
+            })
+            commentsConnObj.onError.connect(function(){
+                activeConnObj = undefined
+            })
 
             activeConnObj = commentsConnObj
         }

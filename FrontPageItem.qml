@@ -87,6 +87,9 @@ Item {
                     loading = false
                     activeConnObj = undefined
                 })
+                subrConnObj.onError.connect(function(){
+                    activeConnObj = undefined
+                })
 
                 activeConnObj = subrConnObj
             }

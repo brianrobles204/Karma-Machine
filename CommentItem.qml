@@ -11,7 +11,7 @@ SwipeBox{
     property string vote: commentObj ? commentObj.data.likes === true ? "up" : commentObj.data.likes === false ? "down" : "" : ""
 
     property real internalPadding: units.gu(1)
-    property real bottomPadding: isMinimizeable && !isMinimized ? units.gu(0.6) : 0
+    property real bottomPadding: units.gu(0.6)
     property color primaryColor: "#f2f2f2"
     property color altColor: "#eaeaea"
 
