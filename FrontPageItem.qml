@@ -381,10 +381,11 @@ Item {
                                         }
                                     }
                                     ToolbarButton {
+                                        //TODO: Rename custom to casual
                                         property bool custom: redditObj.getSubscribedArray().indexOf(postList.subreddit) !== -1 || postList.subreddit === "" || postList.subreddit === "All"
 
                                         iconSource: "media/ui/user.svg"
-                                        text: custom ? "Custom…" : "<b>Custom…</b>"
+                                        text: custom ? "Casual" : "<b>Casual</b>"
                                         enabled: redditNotifier.authStatus !== "loading"
 
                                         MouseArea {

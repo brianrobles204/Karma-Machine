@@ -67,24 +67,58 @@ Item {
 
     function insertCommentObj(commentObj) {
         commentsPageItem.insertComment(commentObj)
-        postHeader.show()
         commentsSection.contentY = commentsPageItem.beginningCommentsPos - units.gu(0.6)
+        postHeaderShowTimer.start()
+    }
+
+    Timer {
+        id: postHeaderShowTimer
+        onTriggered: postHeader.show()
+        interval: UbuntuAnimation.SlowDuration
     }
 
     Header {
         id: postHeader
-        title: commentsSection.state == "linkOpen" ? webSection.title : commentsSection.title
-        flickable: postPageItem.flickable
-        z: 120
+
         property bool exception: false
         property bool ignoreHide: false
-        contents: headerContents
 
         property real contentHeight: units.gu(7.5)
         property int fontWeight: Font.Light
         property string fontSize: "x-large"
         property color textColor: "#fafafa"
         property real textLeftMargin: units.gu(2)
+
+        function show() {
+            //needed because changing flickables causes the header to show automatically
+            if(commentsSection.state == "commentsOpen" || (webSection.atYEnd && !webSection.atYBeginning) || !exception) postHeader.y = 0
+        }
+
+        contents: headerContents
+        title: commentsSection.state == "linkOpen" ? webSection.title : commentsSection.title
+        flickable: postPageItem.flickable
+        z: 120
+
+        onYChanged: {
+            if(commentsSection.state == "linkOpen"/* && !commentsSection.isPressed*/) {
+                if(y === -height) {
+                    if(flickable.contentY > 0 && !ignoreHide){
+                        commentsSection.hide()
+                    } else {
+                        ignoreHide = false
+                    }
+                } else if( y === 0) {
+                    commentsSection.peek()
+                }
+            }
+        }
+
+        Behavior on y {
+            enabled: (postHeader.flickable && !postHeader.flickable.moving) || postHeader.exception
+            SmoothedAnimation {
+                duration: UbuntuAnimation.BriskDuration
+            }
+        }
 
         Item {
             id: headerContents
@@ -122,32 +156,6 @@ Item {
                 rotation: commentsSection.state == "commentsOpen" ? 0 : 180
                 Behavior on rotation {UbuntuNumberAnimation{}}
             }
-        }
-
-        Behavior on y {
-            enabled: (postHeader.flickable && !postHeader.flickable.moving) || postHeader.exception
-            SmoothedAnimation {
-                duration: UbuntuAnimation.BriskDuration
-            }
-        }
-
-        onYChanged: {
-            if(commentsSection.state == "linkOpen"/* && !commentsSection.isPressed*/) {
-                if(y === -height) {
-                    if(flickable.contentY > 0 && !ignoreHide){
-                        commentsSection.hide()
-                    } else {
-                        ignoreHide = false
-                    }
-                } else if( y === 0) {
-                    commentsSection.peek()
-                }
-            }
-        }
-
-        function show() {
-            //needed because changing flickables causes the header to show automatically
-            if(commentsSection.state == "commentsOpen" || (webSection.atYEnd && !webSection.atYBeginning) || !exception) postHeader.y = 0
         }
 
         HeaderArea {

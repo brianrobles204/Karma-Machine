@@ -244,6 +244,8 @@ MainView {
         Page {
             id: postPage
 
+            signal commentPosted
+
             anchors.fill: parent
             visible: false
 
@@ -262,13 +264,44 @@ MainView {
 
                     onCancelClicked: PopupUtils.close(commentComposerSheet)
                     onConfirmClicked: {
-                        var postPage = postPageItem
+                        var postPageCopy = postPage
+                        var postPageItemCopy = postPageItem
+                        var windowCopy = window
                         var commentConnObj = postPageItem.postObj.comment(commentTextArea.text)
                         commentConnObj.onSuccess.connect(function() {
-                            postPage.insertCommentObj(commentConnObj.response)
-                            activePostObjChanged()
+                            postPageItemCopy.insertCommentObj(commentConnObj.response)
+                            windowCopy.activePostObjChanged()
+                            postPageCopy.commentPosted()
                         })
+                        PopupUtils.open(commentLoaderComponent)
                         PopupUtils.close(commentComposerSheet)
+                    }
+                }
+            }
+
+            //TODO: Replace with a more fitting component. Popovers are not designed for this; they close on outside tap
+            //The SDK needs more versatile components first
+            Component {
+                id: commentLoaderComponent
+                Popover {
+                    id: commentLoaderPopover
+
+                    property real padding: units.gu(2)
+
+                    ActivityIndicator {
+                        id: commentLoaderIndicator
+                        anchors { top: parent.top; topMargin: commentLoaderPopover.padding; horizontalCenter: parent.horizontalCenter }
+                        running: true
+                    }
+                    Label {
+                        anchors { top: commentLoaderIndicator.bottom; topMargin: commentLoaderPopover.padding; horizontalCenter: parent.horizontalCenter }
+                        text: "Posting Comment…"
+                        height: implicitHeight + commentLoaderPopover.padding*2
+                    }
+
+                    Connections {
+                        target: postPage
+                        onCommentPosted: PopupUtils.close(commentLoaderPopover)
                     }
                 }
             }
